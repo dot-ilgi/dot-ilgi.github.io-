@@ -114,6 +114,18 @@ canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rend
 .badge{position:absolute;top:-6px;right:-6px;background:var(--pogi);color:#fff;font-size:10px;font-weight:600;min-width:17px;height:17px;line-height:17px;text-align:center;border-radius:9px}
 .help{color:var(--sub);font-size:12px;text-align:center}
 @media (prefers-reduced-motion:reduce){.next{animation:none}.fade,.noti,.place,.choices{transition:none}}
+/* 한 화면에 딱 맞추기: 페이지 스크롤 없음, 게임 화면이 남는 높이에 맞춰 줄어듦 */
+html{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none}
+body{height:100%;overflow:hidden;overscroll-behavior:none;padding-block:8px 8px;touch-action:manipulation}
+.wrap{height:100%;gap:0}
+.device{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding:10px 10px 10px}
+.status,.bag,.goal{flex:none}
+.stage{flex:1 1 auto;min-height:0;container-type:size;display:flex;justify-content:center;align-items:center}
+.stage .screen{width:min(100cqw,75cqh);height:auto;aspect-ratio:3/4;flex:none}
+.ctrl{flex:none;padding:10px 6px 0}
+.home{font-family:var(--f-ui);font-size:13px;color:var(--sub);text-decoration:underline;text-underline-offset:3px}
+@media (max-height:740px){.stick{width:100px;height:100px}.knob{width:46px;height:46px;margin:-23px 0 0 -23px}.knob::after{inset:16px}.abtn{width:64px;height:64px;font-size:18px}.bag{padding-bottom:6px}.goal{padding-bottom:6px}.status{padding-bottom:4px}}
+@media (max-height:620px){.bag{display:none}.ctrl{padding-top:6px}}
 </style>
 
 </head>
@@ -129,6 +141,7 @@ canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rend
     </div>
     <div class="bag" id="bag"></div>
     <div class="goal"><span id="goal"></span></div>
+    <div class="stage">
     <div class="screen" id="screen">
       <canvas id="cv"></canvas>
       <div class="place off" id="place">1층 로비</div>
@@ -149,6 +162,7 @@ canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rend
         <div class="sub">면접 8분 전, 회사에서 벌어지는 나와의 싸움</div>
         <button class="big" id="startBtn" type="button">시작하겠습니다</button>
         <div class="sub" id="titleCount"></div>
+        <a class="home" href="../">도트일기 다른 게임 보기</a>
       </div>
       <div class="ov end" id="endOv" hidden>
         <div class="card">
@@ -166,6 +180,7 @@ canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rend
         </div>
       </div>
     </div>
+    </div>
     <div class="ctrl">
       <div class="stick" id="stick" aria-label="조이스틱"><div class="knob" id="knob"></div></div>
       <div class="side">
@@ -178,7 +193,6 @@ canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rend
       </div>
     </div>
   </div>
-  <p class="help">조이스틱으로 이동 · 느낌표 뜨면 A · 선택지는 한 번 골라서, 한 번 더 눌러 결정<br><a href="../" style="color:inherit">도트일기 다른 게임</a></p>
 </main>
 
 <script>
