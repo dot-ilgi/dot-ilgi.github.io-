@@ -40,9 +40,10 @@ input{font:inherit;color:inherit;-webkit-user-select:text;user-select:text}
 .screen{touch-action:pan-y}
 @media (pointer:coarse){body{align-items:flex-start}.phone{max-height:none;height:calc(100% - max(26px,env(safe-area-inset-bottom,0px) + 8px))}}
 .phone.glitch{animation:glitch .12s steps(2) infinite}
-@keyframes glitch{0%{filter:none;transform:none}50%{filter:invert(1) hue-rotate(90deg) contrast(2);transform:translate(3px,-2px)}100%{filter:saturate(3) hue-rotate(-40deg);transform:translate(-2px,1px)}}
+.phone.glitch #stage{filter:saturate(.35) contrast(1.35) sepia(.25) hue-rotate(-20deg)}
+@keyframes glitch{0%{transform:none}50%{transform:translate(3px,-2px)}100%{transform:translate(-2px,1px)}}
 .phone.flick #stage{animation:flick .9s}
-@keyframes flick{10%,30%,60%{opacity:.15}20%,45%,80%{opacity:1}}
+@keyframes flick{20%{opacity:.25}55%{opacity:1}}
 
 /* status bar */
 .status{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:center;height:54px;padding:6px 30px 0 40px;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;z-index:30;touch-action:none;pointer-events:none}
@@ -425,7 +426,7 @@ button.widget{width:100%;text-align:left}
 .camflash{position:absolute;inset:0;background:#fff;animation:camf .25s forwards;pointer-events:none;z-index:9}
 @keyframes camf{to{opacity:0}}
 .scare{position:absolute;inset:0;z-index:80;background:#000 center/cover no-repeat;animation:scare 1.6s forwards}
-@keyframes scare{0%{transform:scale(1.4);filter:contrast(2) brightness(1.8)}8%{transform:scale(2.4)}15%{transform:scale(2.2);filter:contrast(3) brightness(2.4) saturate(0)}100%{transform:scale(2.6);filter:brightness(.1)}}
+@keyframes scare{0%{transform:scale(1.4);filter:contrast(1.6) brightness(1.1)}8%{transform:scale(2.4)}15%{transform:scale(2.2);filter:contrast(1.8) brightness(1.15) saturate(0)}100%{transform:scale(2.6);filter:brightness(.1)}}
 
 /* calendar */
 .calhead{display:flex;justify-content:space-between;align-items:center;padding:0 16px;height:44px;color:var(--red);font-size:17px}
