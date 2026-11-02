@@ -678,7 +678,9 @@ $('back').onclick=()=>{if(!guided){guided=true;try{localStorage.setItem('guided'
 let db=null,uid=null,myItems=[],remote=[],local=[],myDays=[],todayCount=0;
 function dayKey(){return new Date(Date.now()+9*36e5).toISOString().slice(0,10);}
 function updateCount(){$('todayCount').textContent=todayCount?`오늘 ${todayCount}명이 이곳에 머물렀어요`:'';}
-async function recordVisit(){if(!(db&&uid))return;const k=dayKey();if(myDays.includes(k))return;myDays=[...myDays,k].slice(-60);try{await db.collection('visits').doc(uid).set({days:myDays});}catch(e){}}
+/* one shared counter per day: daily/{dayKey}.count, each device adds itself once a day */
+async function recordVisit(){if(!(db&&uid))return;const k=dayKey();let last=null;try{last=localStorage.getItem('visitDay')}catch(e){}if(last===k)return;
+  try{await db.doc('daily/'+k).set({count:firebase.firestore.FieldValue.increment(1)},{merge:true});try{localStorage.setItem('visitDay',k)}catch(e){}}catch(e){}}
 try{local=JSON.parse(localStorage.getItem('thoughtsLocal')||'[]')}catch(e){local=[]}
 const BAD=['ㅗ','凸','🖕','씨발','시발','ㅅㅂ','ㅆㅂ','씨바','씹','병신','ㅂㅅ','좆','존나','졸라','개새','개색','지랄','닥쳐','꺼져','미친놈','미친년','썅','엿먹','니미','느금','fuck','shit','bitch','porn','섹스','야동','토토','카지노','바카라','도박','대출','오픈채팅','오픈톡','텔레그램','카톡아이디'];
 function isBad(t){const raw=String(t).toLowerCase();if(/(https?:|www\.|\.(com|kr|net|io|me|xyz)\b)/.test(raw))return true;
@@ -693,12 +695,12 @@ rebuildPool();
 (async()=>{if(!window.claude?.use)return;db=await window.claude.use('db');if(!db)return;
   const user=await window.claude.use('user');try{uid=user?await user.id():null}catch(e){uid=null}
   try{isOwner=user?await user.isOwner():false}catch(e){isOwner=false}
-  db.collection('visits').limit(1000).onSnapshot(snap=>{let n=0;const k=dayKey();for(const d of snap.docs){const days=d.data()?.days;if(Array.isArray(days)&&days.includes(k))n++;if(uid&&d.id===uid)myDays=Array.isArray(days)?days.slice(-60):[];}todayCount=n;updateCount();},()=>{});
-  db.collection('reports').limit(1000).onSnapshot(snap=>{const m=new Map();for(const d of snap.docs){const ks=Array.isArray(d.data()?.keys)?d.data().keys.slice(-200):[];
+  db.doc('daily/'+dayKey()).onSnapshot(d=>{todayCount=d.exists?(+d.data()?.count||0):0;updateCount();},()=>{});
+  db.collection('reports').limit(300).onSnapshot(snap=>{const m=new Map();for(const d of snap.docs){const ks=Array.isArray(d.data()?.keys)?d.data().keys.slice(-200):[];
     if(uid&&d.id===uid)ks.forEach(k=>myReports.add(k));for(const k of new Set(ks))m.set(k,(m.get(k)||0)+1);}reportCounts=m;rebuildRaw();},()=>{});
   db.doc('moderation/hidden').onSnapshot(s=>{hiddenKeys=new Set(s.exists&&Array.isArray(s.data()?.keys)?s.data().keys:[]);rebuildRaw();},()=>{});
   const timer=setTimeout(()=>toast('다른 사람들의 생각을 아직 불러오지 못했어요'),10000);
-  db.collection('thoughts').limit(500).onSnapshot(snap=>{if(!snap.metadata?.fromCache)clearTimeout(timer);const out=[];
+  db.collection('thoughts').orderBy('last','desc').limit(150).onSnapshot(snap=>{if(!snap.metadata?.fromCache)clearTimeout(timer);const out=[];
     for(const d of snap.docs){const items=Array.isArray(d.data()?.items)?d.data().items.slice(-10):[];if(uid&&d.id===uid)myItems=items;items.forEach(it=>{const w=cleanW(it,uid&&d.id===uid,d.id+':'+it.at);if(w)out.push(w);});}
     lastDocs=snap.docs;remote=out;rebuildPool();},()=>{clearTimeout(timer);db=null;});})();
 let lastDocs=[];function rebuildRaw(){const out=[];for(const d of lastDocs){const items=Array.isArray(d.data()?.items)?d.data().items.slice(-10):[];items.forEach(it=>{const w=cleanW(it,uid&&d.id===uid,d.id+':'+it.at);if(w)out.push(w);});}remote=out;rebuildPool();}
@@ -718,7 +720,7 @@ $('form').addEventListener('submit',async e=>{e.preventDefault();const t=inp.val
   const sl=thoughtSlots[bi];const tm=new THREE.Mesh(new THREE.PlaneGeometry(9,1.7),new THREE.MeshBasicMaterial({map:thoughtTex(t),transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
   tm.position.copy(sl.p);tm.rotation.y=sl.ry;scene.add(tm);rise={m:tm,from:sl.p.clone(),to,t:0};gaze={t:0,dur:11};
   $('writeSheet').hidden=true;pendingResult=t;setTimeout(()=>{if(pendingResult===t){pendingResult=null;showResult(t);}},16000);
-  if(db&&uid){try{await db.collection('thoughts').doc(uid).set({items:[...myItems,item].slice(-10)});return;}catch(err){}}
+  if(db&&uid){try{await db.collection('thoughts').doc(uid).set({items:[...myItems,item].slice(-10),last:item.at});return;}catch(err){}}
   local.push(item);local=local.slice(-10);try{localStorage.setItem('thoughtsLocal',JSON.stringify(local))}catch(_){}});
 
 /* ---------- loop ---------- */
