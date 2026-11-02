@@ -416,9 +416,9 @@ const thoughtSlots=[];
 for(let i=0;i<5;i++){const z=-16+i*8;thoughtSlots.push({p:new THREE.Vector3(-HALF+.6,1.6+(i%2)*.5,z),ry:Math.PI/2});thoughtSlots.push({p:new THREE.Vector3(HALF-.6,1.6+((i+1)%2)*.5,z),ry:-Math.PI/2});}
 for(const x of[-13,0,13])thoughtSlots.push({p:new THREE.Vector3(x,1.8,-HALF+.6),ry:0});
 for(const x of[-13,13])thoughtSlots.push({p:new THREE.Vector3(x,1.8,HALF-.6),ry:Math.PI});
-function thoughtTex(t){const cv=document.createElement('canvas');cv.width=512;cv.height=96;const g=cv.getContext('2d');
-  g.font='700 34px "Nanum Myeongjo",serif';g.textAlign='center';g.textBaseline='middle';g.shadowColor='rgba(255,200,120,.8)';g.shadowBlur=14;
-  g.fillStyle='#f2d9a6';let s=t;while(g.measureText(s).width>480&&s.length>1)s=s.slice(0,-1);g.fillText(s,256,50);return new THREE.CanvasTexture(cv);}
+function thoughtTex(t){const cv=document.createElement('canvas');cv.width=1024;cv.height=192;const g=cv.getContext('2d');
+  g.font='700 68px "Nanum Myeongjo",serif';g.textAlign='center';g.textBaseline='middle';g.shadowColor='rgba(255,200,120,.9)';g.shadowBlur=28;
+  g.fillStyle='#f6e0b0';let s=t;while(g.measureText(s).width>960&&s.length>1)s=s.slice(0,-1);g.fillText(s,512,100);return new THREE.CanvasTexture(cv);}
 const shown=[];let pool=[],poolIdx=0;
 function spawnThought(slotIdx,text,mine){const s=thoughtSlots[slotIdx];
   const m=new THREE.Mesh(new THREE.PlaneGeometry(5.2,.98),new THREE.MeshBasicMaterial({map:thoughtTex(text),transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
@@ -611,7 +611,7 @@ let music=null,musicOn=false;
 let guided=false;try{guided=localStorage.getItem('guided')==='1'}catch(e){}
 const guideRing=new THREE.Mesh(new THREE.RingGeometry(.36,.46,48),new THREE.MeshBasicMaterial({color:0xe8cf98,transparent:true,opacity:.8,depthWrite:false,side:THREE.DoubleSide}));guideRing.rotation.x=-Math.PI/2;guideRing.visible=false;scene.add(guideRing);
 let lastTouch=0;
-let cine=null,gaze=null,birth=null,rise=null,introT=0,medFree=false,medK=0;const INTRO=6.5;
+let pendingResult=null;let cine=null,gaze=null,birth=null,rise=null,introT=0,medFree=false,medK=0;const INTRO=6.5;
 let entered=false;
 let mode='gate',seat=null,nearStool=null,medT=0,medLen=60,breathT=0,afterMed='walk';
 const sitBtn=$('sitBtn'),medBtn=$('medBtn'),standBtn=$('standBtn');
@@ -715,9 +715,9 @@ $('form').addEventListener('submit',async e=>{e.preventDefault();const t=inp.val
   birthAt=item.at;const to=new THREE.Vector3(...domeXYZ(alt,az,SKY_R-4));
   // my sentence appears on the wall facing that part of the sky, rises up the wall, then flies off as light to become the star
   let bi=0,bd=-2;thoughtSlots.forEach((sl,i)=>{const d=(sl.p.x*to.x+sl.p.z*to.z)/(Math.hypot(sl.p.x,sl.p.z)*Math.hypot(to.x,to.z)+1e-6);if(d>bd){bd=d;bi=i;}});
-  const sl=thoughtSlots[bi];const tm=new THREE.Mesh(new THREE.PlaneGeometry(5.2,.98),new THREE.MeshBasicMaterial({map:thoughtTex(t),transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
-  tm.position.copy(sl.p);tm.rotation.y=sl.ry;scene.add(tm);rise={m:tm,from:sl.p.clone(),to,t:0};gaze={t:0,dur:9};
-  showResult(t);
+  const sl=thoughtSlots[bi];const tm=new THREE.Mesh(new THREE.PlaneGeometry(9,1.7),new THREE.MeshBasicMaterial({map:thoughtTex(t),transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
+  tm.position.copy(sl.p);tm.rotation.y=sl.ry;scene.add(tm);rise={m:tm,from:sl.p.clone(),to,t:0};gaze={t:0,dur:11};
+  $('writeSheet').hidden=true;pendingResult=t;setTimeout(()=>{if(pendingResult===t){pendingResult=null;showResult(t);}},16000);
   if(db&&uid){try{await db.collection('thoughts').doc(uid).set({items:[...myItems,item].slice(-10)});return;}catch(err){}}
   local.push(item);local=local.slice(-10);try{localStorage.setItem('thoughtsLocal',JSON.stringify(local))}catch(_){}});
 
@@ -813,14 +813,14 @@ function loop(){const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime,p=me
     medK+=((medFree?0:sm(medT/2.5))-medK)*Math.min(1,dt*(medFree?2.5:6));fPos.lerp(cp,medK);fLook.lerp(new THREE.Vector3(0,2.9,0),medK);}
   me.tag.visible=mode!=='med'&&!(cine&&cine.t<4.2);
   // my sentence climbing the wall
-  if(rise){rise.t+=dt/5.5;const e=sm(rise.t);rise.m.position.y=rise.from.y+e*4.8;rise.m.material.opacity=Math.min(1,rise.t*5)*Math.min(1,(1-rise.t)*4)*.95;
+  if(rise){rise.t+=dt/6.5;const e=sm(rise.t);rise.m.position.y=rise.from.y+e*6;rise.m.material.opacity=Math.min(1,rise.t*5)*Math.min(1,(1-rise.t)*4)*.95;
     if(gaze)gaze.p=rise.m.position.clone();
     if(rise.t>=.8&&!birth){const sp=new THREE.Sprite(lampSprite);sp.scale.set(1.4,1.4,1);sp.position.copy(rise.m.position);scene.add(sp);birth={sp,from:sp.position.clone(),to:rise.to,t:0};}
     if(rise.t>=1){scene.remove(rise.m);rise.m.material.map.dispose();rise.m.material.dispose();rise.m.geometry.dispose();rise=null;}}
   // a new star: follow its light up into the sky
   if(birth){birth.t+=dt/3.6;const e=sm(birth.t);birth.sp.position.lerpVectors(birth.from,birth.to,e);birth.sp.position.y+=Math.sin(e*Math.PI)*4;
     const sc=1.2+e*5;birth.sp.scale.set(sc,sc,1);
-    if(birth.t>=1){scene.remove(birth.sp);birth=null;birthAt=-1;placeWishes();toast('새 별이 떴어요');}}
+    if(birth.t>=1){scene.remove(birth.sp);birth=null;birthAt=-1;placeWishes();toast('새 별이 떴어요');if(pendingResult!==null){const pr=pendingResult;pendingResult=null;setTimeout(()=>showResult(pr),1600);}}}
   if(gaze){gaze.t+=dt;const g=sm(gaze.t/1.2)*(1-sm((gaze.t-gaze.dur)/1.5));if(birth)gaze.p=birth.sp.position.clone();if(gaze.p)fLook.lerp(gaze.p,g*.9);if(gaze.t>gaze.dur+1.5)gaze=null;}
   // opening: start looking up into the night sky, then come down to the path
   if(!entered)introT=0;
