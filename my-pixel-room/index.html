@@ -12,7 +12,7 @@ img.pt{display:block;image-rendering:pixelated;pointer-events:none}
 button.pb{border:0;cursor:pointer;padding:6px 8px;min-height:34px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 button.pb:active,button.pb.on{transform:translateY(3px);box-shadow:0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink)}
 header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px}
-.stage{position:relative;margin:6px 9px 10px;background:#fbe9e1;box-shadow:0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink),0 8px 0 0 #3a2e4455}
+.stage{position:sticky;top:0;z-index:3;margin:6px 9px 10px;background:#fbe9e1;box-shadow:0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink),0 8px 0 0 #3a2e4455}
 #cv{display:block;width:100%;image-rendering:pixelated;touch-action:none;cursor:grab}
 .tl{position:absolute;display:flex;gap:6px}
 .tl button.pb{width:38px;height:38px;padding:0}
@@ -29,11 +29,18 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
 .sw.on{box-shadow:0 -3px 0 0 #ffb43a,0 3px 0 0 #ffb43a,-3px 0 0 0 #ffb43a,3px 0 0 0 #ffb43a,0 -6px 0 0 var(--ink),0 6px 0 0 var(--ink),-6px 0 0 0 var(--ink),6px 0 0 0 var(--ink)}
 .pick{position:relative;width:26px;height:22px;flex:0 0 auto;margin:2px;background:linear-gradient(90deg,#ff5a5a 0 25%,#ffd84a 25% 50%,#6cc08b 50% 75%,#4aa3df 75%);box-shadow:0 -2px 0 0 var(--ink),0 2px 0 0 var(--ink),-2px 0 0 0 var(--ink),2px 0 0 0 var(--ink)}
 .pick input{position:absolute;inset:-8px;opacity:0;width:44px;height:40px;cursor:pointer}
-.tabs{display:flex;gap:4px;overflow-x:auto;padding:10px 10px 8px;scrollbar-width:none;position:sticky;top:0;z-index:2;background:var(--bg)}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:10px 10px 8px;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button.pb{flex:0 0 auto}
 .tabs button.on{--p:var(--ink)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;padding:6px 12px 20px}
+.grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 0 10px;-webkit-overflow-scrolling:touch}
+.grid::-webkit-scrollbar{display:none}
+.page{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,auto);gap:12px 10px;padding:6px 14px;box-sizing:border-box;align-content:start}
+.page .it{min-height:118px;justify-content:flex-start}
+.pnav{display:flex;align-items:center;justify-content:center;gap:10px;padding:2px 0 18px}
+.pnav button.pb{width:44px;height:36px;padding:0}
+.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:180px}
+.dots i{width:7px;height:7px;background:#e2d2dc;display:block}.dots i.on{background:#3a2e44}
 .it{cursor:pointer;padding:5px 3px 7px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .it:active{transform:translateY(3px)}
 .it.on{--p:#fff3b8}
@@ -65,11 +72,12 @@ button.pb.wide{min-width:70px;--p:#fff3b8}
   <div class="tl" id="tlA"><button class="pb" id="bgm"></button><button class="pb" id="photo"></button></div>
  <div class="tl" id="tlB"><button class="pb" id="zout"></button><button class="pb" id="zin"></button><button class="pb" id="home"></button></div>
 </div>
-<div class="panel pb ctrl" id="ctrl"></div>
-<div class="panel pb" id="colors"></div>
 <div class="tabs" id="tabs"></div>
 <div class="cnt" id="cnt"></div>
 <div class="grid" id="grid"></div>
+<div class="pnav" id="pnav"><button class="pb" id="pprev"></button><div class="dots" id="dots"></div><button class="pb" id="pnext"></button></div>
+<div class="panel pb ctrl" id="ctrl"></div>
+<div class="panel pb" id="colors"></div>
 <div class="foot" id="foot"></div>
 </div>
 <div class="modal" id="modal"><button class="pb" id="mclose"></button><img class="shot" id="shot"><div id="mbar"><button class="pb" id="msave"></button></div><span id="mtxt"></span></div>
@@ -1048,15 +1056,19 @@ const thumbs={};
 function tabsUI(){$('tabs').innerHTML=CATS.map(([k,n])=>`<button class="pb${k==tab?' on':''}" data-t="${k}">${PT(n,16,k==tab?'#ffffff':'#3a2e44')}</button>`).join('');$('tabs').querySelectorAll('button').forEach(e=>e.onclick=()=>{tab=e.dataset.t;SFX.tab();tabsUI();gridUI();ui()})}
 function surfThumb(cvs,Pt,isWall,m,s){const c=cvs.getContext('2d');cvs.width=36;cvs.height=32;const im=c.createImageData(36,32);for(let y=0;y<32;y++)for(let x=0;x<36;x++){const col=isWall?Pt.f(x+10,31-y+4,m,s):Pt.f(x+3,y+3,m,s);const d=(y*36+x)*4;im.data[d]=R(col);im.data[d+1]=Gc(col);im.data[d+2]=Bc(col);im.data[d+3]=255}c.putImageData(im,0,0)}
 function moodThumb(cvs,L){const c=cvs.getContext('2d');cvs.width=36;cvs.height=32;for(let y=0;y<32;y++){c.fillStyle=hex(mix(L.bg[0],L.bg[1],y/32));c.fillRect(0,y,36,1)}c.fillStyle=hex(rgb(200*L.amb[0],190*L.amb[1],170*L.amb[2]));c.fillRect(6,18,24,10);if(L.lamps>.3){c.fillStyle='#ffe9a8';c.fillRect(24,8,4,4);c.globalAlpha=.25;c.fillRect(20,4,12,12);c.globalAlpha=1}}
+function paginate(g,html){const per=6,pages=[];for(let i=0;i<html.length;i+=per)pages.push(`<div class="page">${html.slice(i,i+per).join('')}</div>`);g.innerHTML=pages.join('');g.scrollLeft=0;PG.n=pages.length;PG.i=0;dotsUI()}
+const PG={n:1,i:0};
+function dotsUI(){$('dots').innerHTML=Array.from({length:PG.n},(_,i)=>`<i class="${i==PG.i?'on':''}"></i>`).join('');$('pprev').style.visibility=PG.i>0?'visible':'hidden';$('pnext').style.visibility=PG.i<PG.n-1?'visible':'hidden'}
+function goPage(i){const g=$('grid');i=Math.max(0,Math.min(PG.n-1,i));g.scrollTo({left:i*g.clientWidth,behavior:'smooth'})}
 function gridUI(){const g=$('grid');let L,n;
- if(tab=='wp'||tab=='fl'||tab=='mood'){L=tab=='wp'?WALLS:tab=='fl'?FLOORS:LIGHTS;g.innerHTML=L.map(P=>`<div class="it pb" data-k="${P.k}"><canvas></canvas>${PTL((P.e?P.e+' ':'')+P.n,14)}</div>`).join('');
+ if(tab=='wp'||tab=='fl'||tab=='mood'){L=tab=='wp'?WALLS:tab=='fl'?FLOORS:LIGHTS;paginate(g,L.map(P=>`<div class="it pb" data-k="${P.k}"><canvas></canvas>${PTL((P.e?P.e+' ':'')+P.n,14)}</div>`));
   g.querySelectorAll('.it').forEach((e,i)=>{const cv2=e.querySelector('canvas');if(tab=='mood')moodThumb(cv2,L[i]);else surfThumb(cv2,L[i],tab=='wp',L[i].m,L[i].s);e.onclick=()=>{if(tab=='mood'){st.light=L[i].k;SFX.light()}else{const tg=tab=='wp'?st.wall:st.floor;tg.p=L[i].k;tg.m=L[i].m;tg.s=L[i].s;SFX.add()}sel=0;changed()}});
   $('cnt').innerHTML=PT(`${L.length}가지`,14,'#9a86a6');ui();return}
- L=DEFS.filter(d=>d.c==tab);$('cnt').innerHTML=PT(`${L.length}가지 · 눌러서 방에 놓기`,14,'#9a86a6');
- g.innerHTML=L.map(D=>`<div class="it pb" data-k="${D.k}"><canvas width="72" height="64"></canvas>${PTL(D.n,14)}</div>`).join('');
+ L=DEFS.filter(d=>d.c==tab);$('cnt').innerHTML=PT(`${L.length}가지 · 옆으로 넘겨 보기`,14,'#9a86a6');
+ paginate(g,L.map(D=>`<div class="it pb" data-k="${D.k}"><canvas width="72" height="64"></canvas>${PTL(D.n,14)}</div>`));
  const es=[...g.querySelectorAll('.it')];es.forEach((e,i)=>e.onclick=()=>addItem(L[i].k));
  let i=0;const step=()=>{if(i>=L.length)return;const D=L[i],e=es[i];if(!e.isConnected)return;if(!thumbs[D.k])thumbs[D.k]=renderThumb(D);const im=thumbs[D.k];const tc=document.createElement('canvas');tc.width=im.width;tc.height=im.height;tc.getContext('2d').putImageData(new ImageData(im.data,im.width,im.height),0,0);const c=e.querySelector('canvas').getContext('2d');const sc=Math.min(72/im.width,64/im.height);c.imageSmoothingEnabled=sc<1;c.clearRect(0,0,72,64);const w=im.width*sc,h=im.height*sc;c.drawImage(tc,(72-w)/2,(64-h)/2,w,h);i++;setTimeout(step,0)};step()}
-function addItem(k){const D=DEF[k];let it;if(D.wall){const v=visWalls();const cnt=w=>st.items.filter(i=>i.wall===w&&DEF[i.k].wall).length;const w=v.sort((a,b)=>cnt(a)-cnt(b))[0]??0;it=mk(k,{wall:w})}else{it=mk(k,{});it.x=Math.round((S-D.w)/2);it.y=Math.round((S-D.d)/2)}clampIt(it);st.items.push(it);sel=it.id;SFX.add();changed();window.scrollTo({top:0,behavior:'smooth'})}
+function addItem(k){const D=DEF[k];let it;if(D.wall){const v=visWalls();const cnt=w=>st.items.filter(i=>i.wall===w&&DEF[i.k].wall).length;const w=v.sort((a,b)=>cnt(a)-cnt(b))[0]??0;it=mk(k,{wall:w})}else{it=mk(k,{});it.x=Math.round((S-D.w)/2);it.y=Math.round((S-D.d)/2)}clampIt(it);st.items.push(it);sel=it.id;SFX.add();changed()}
 // ---------- gestures ----------
 function pix(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
 function floorPt(px,py,zz){const b=B_(),a=(px-SCX-st.panX)/st.zoom,bb=(py-SCY-st.panY)/st.zoom,zp=FT+zz;const A=a/(2*R2),Bv=-(bb+2*(zp-CZ))/R2;return[GX/2+b.rx*A+b.fx*Bv-WT,GY/2+b.ry*A+b.fy*Bv-WT]}
@@ -1086,6 +1098,8 @@ let FINAL=null,DL;(async()=>{try{DL=window.claude?await window.claude.use('downl
 $('msave').onclick=async()=>{SFX.tab();if(!FINAL)return;const msg=t=>{$('mtxt').innerHTML=PT(t,14,'#3a2e44')};if(!DL&&window.claude){try{DL=await window.claude.use('downloads')}catch(e){}}if(!DL){try{const bl=await new Promise(r=>FINAL.toBlob(r,'image/png'));const url=URL.createObjectURL(bl);const an=document.createElement('a');an.href=url;an.download='my-pixel-room.png';document.body.appendChild(an);an.click();an.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);msg('저장했어요!');SFX.add()}catch(e){msg('저장하지 못했어요 · 화면을 캡처해 주세요')}return}const blob=await new Promise(r=>FINAL.toBlob(r,'image/png'));try{await DL.save({filename:'my-pixel-room.png',data:blob});msg('저장했어요!');SFX.add()}catch(e){msg(e&&e.code==='declined'?'저장을 취소했어요':'저장하지 못했어요 · 화면을 캡처해 주세요')}};
 $('mclose').onclick=()=>{SFX.tab();$('modal').classList.remove('on')};
 function INIT(){
+$('pprev').innerHTML=PT('◀',15);$('pnext').innerHTML=PT('▶',15);$('pprev').onclick=()=>{SFX.tab();goPage(PG.i-1)};$('pnext').onclick=()=>{SFX.tab();goPage(PG.i+1)};
+$('grid').addEventListener('scroll',()=>{const g=$('grid');const i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth));if(i!==PG.i){PG.i=i;dotsUI();SFX.move()}},{passive:true});
 $('ttl').innerHTML=PT('my pixel room',24)+'';$('reset').innerHTML=PT('비우기',16);
 $('photo').innerHTML=PT('완성',15);$('zin').innerHTML=PT('+',18);$('zout').innerHTML=PT('-',18);$('home').innerHTML=PT('⌂',16);
 $('mtxt').innerHTML='';$('msave').innerHTML=PT('이미지 저장',16);$('mclose').innerHTML=PT('✕',15);$('foot').innerHTML=PT('dot.ilgi · my pixel room',14,'#9a86a6');
