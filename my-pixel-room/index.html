@@ -853,6 +853,21 @@ DEFS.forEach(d=>{if(d.s==null)d.s=0xffffff;if(d.m==null)d.m=0xffffff});
 
 // ===== ENGINE =====
 const DEF={};DEFS.forEach(d=>DEF[d.k]=d);
+let RES=1,FS=S,FWT=WT,FFT=FT,FGX=GX,FGY=GY,FGZ=GZ;
+function setRes(r){RES=r;FS=Math.round(S*r);FWT=Math.round(WT*r);FFT=Math.round(FT*r);FGX=FS+2*FWT;FGY=FGX;FGZ=FFT+Math.round(WH*r)}
+function mkBS(emit,lcb,Rr){if(Rr===1)return mkB(emit,lcb);const B=mkB(emit,lcb?(x,y,z,c,r,p)=>lcb(x*Rr,y*Rr,z*Rr,c,r*Rr,p):null);
+ const wc=c=>typeof c==='function'?(x,y,z)=>c(Math.floor(x/Rr),Math.floor(y/Rr),Math.floor(z/Rr)):c,wk=k=>k?(i,j,kk)=>k(Math.floor(i/Rr),Math.floor(j/Rr),Math.floor(kk/Rr)):k;
+ const sp=(a,w)=>{const a0=Math.round(a*Rr),a1=Math.round((a+w)*Rr);return[a0,Math.max(1,a1-a0)]};
+ const S2={
+  v(x,y,z,c,m){x=Math.floor(x);y=Math.floor(y);z=Math.floor(z);const cc=typeof c==='function'?c(x,y,z):c;const [x0,w]=sp(x,1),[y0,d]=sp(y,1),[z0,h]=sp(z,1);B.box(x0,y0,z0,w,d,h,cc,m)},
+  box(x,y,z,w,d,h,c,m){if(w<=0||d<=0||h<=0)return;const [x0,ww]=sp(x,w),[y0,dd]=sp(y,d),[z0,hh]=sp(z,h);B.box(x0,y0,z0,ww,dd,hh,wc(c),m)},
+  cyl(cx,cy,z,r,h,c,m,ri,keep){if(h<=0)return;const [z0,hh]=sp(z,h);B.cyl(cx*Rr,cy*Rr,z0,r*Rr,hh,wc(c),m,ri?ri*Rr:ri,wk(keep))},
+  ell(cx,cy,cz,rx,ry,rz,c,m,keep,shell){B.ell(cx*Rr,cy*Rr,cz*Rr,rx*Rr,ry*Rr,rz*Rr,wc(c),m,wk(keep),shell)},
+  cone(cx,cy,z,r0,r1,h,c,m,hol){const [z0,hh]=sp(z,h);B.cone(cx*Rr,cy*Rr,z0,r0*Rr,r1*Rr,hh,wc(c),m,hol?hol*Rr:hol)},
+  line(x0,y0,z0,x1,y1,z1,c,m,r){const o=.5*(Rr-1);B.line(x0*Rr+(r?0:o),y0*Rr+(r?0:o),z0*Rr+(r?0:o),x1*Rr+(r?0:o),y1*Rr+(r?0:o),z1*Rr+(r?0:o),wc(c),m,r?Math.max(.9,r*Rr):(Rr>=1.9?.95:0))},
+  bez(p0,p1,p2,c,m,r){const f=p=>p.map(v=>v*Rr);B.bez(f(p0),f(p1),f(p2),wc(c),m,r?Math.max(.9,r*Rr):(Rr>=1.9?.95:0))},
+  light(x,y,z,col,rad,pw){B.light(x,y,z,col,rad,pw)}};
+ return S2}
 const rotLocal=(lx,ly,w,d,k)=>k==0?[lx,ly]:k==1?[d-1-ly,lx]:k==2?[w-1-lx,d-1-ly]:[ly,w-1-lx];
 const rotLocalC=(lx,ly,w,d,k)=>k==0?[lx,ly]:k==1?[d-ly,lx]:k==2?[w-lx,d-ly]:[ly,w-lx];
 const wallXY=(w,a,ly)=>w==0?[a,ly]:w==1?[S-1-ly,a]:w==2?[S-1-a,S-1-ly]:[ly,S-1-a];
@@ -877,36 +892,38 @@ function buildWorld(G,st){
  const {X,Y,Z,col,mat,ids,wm}=G;col.fill(0);G.nx.fill(0);G.ny.fill(0);G.nz.fill(0);mat.fill(0);ids.fill(0);wm.fill(0);G.lights=[];G.itemWall={};
  const set=(x,y,z,c,m,id,w,n)=>{if(x<0||y<0||z<0||x>=X||y>=Y||z>=Z)return;const i=(z*Y+y)*X+x;if(n){G.nx[i]=Math.round(n[0]*120);G.ny[i]=Math.round(n[1]*120);G.nz[i]=Math.round(n[2]*120)||(n[0]||n[1]?0:1)}else{G.nx[i]=0;G.ny[i]=0;G.nz[i]=0}col[i]=(c&0xffffff)|FLAG;mat[i]=m;ids[i]=id;wm[i]=w||0};
  const fp=FLOORS.find(f=>f.k==st.floor.p)||FLOORS[0];
- for(let y=0;y<S;y++)for(let x=0;x<S;x++){const c=fp.f(x,y,st.floor.m,st.floor.s);for(let z=0;z<FT;z++)set(x+WT,y+WT,z,z==FT-1?c:sh(c,.75),0,0,0)}
+ for(let y=0;y<FS;y++)for(let x=0;x<FS;x++){const c=fp.f(Math.floor(x/RES),Math.floor(y/RES),st.floor.m,st.floor.s);for(let z=0;z<FFT;z++)set(x+FWT,y+FWT,z,z==FFT-1?c:sh(c,.75),0,0,0)}
  const wp=WALLS.find(f=>f.k==st.wall.p)||WALLS[0];
- for(let vy=0;vy<Y;vy++)for(let vx=0;vx<X;vx++){const b0=vy<WT,b1=vx>=WT+S,b2=vy>=WT+S,b3=vx<WT,mask=(b0?1:0)|(b1?2:0)|(b2?4:0)|(b3?8:0);if(!mask)continue;
-  const u=b0?vx-WT:b2?S-1-(vx-WT):b1?vy-WT:S-1-(vy-WT);
-  for(let z=0;z<Z;z++){let c;if(z<FT)c=0xcfc3b8;else if(z<FT+3&&wp.k!='wains'&&wp.k!='twotone')c=z==FT+2?0xe8e2d8:0xf6f2ea;else c=wp.f(u,z-FT,st.wall.m,st.wall.s);if(z==Z-1)c=sh(st.wall.m,.62);set(vx,vy,z,c,0,0,mask)}}
+ for(let vy=0;vy<Y;vy++)for(let vx=0;vx<X;vx++){const b0=vy<FWT,b1=vx>=FWT+FS,b2=vy>=FWT+FS,b3=vx<FWT,mask=(b0?1:0)|(b1?2:0)|(b2?4:0)|(b3?8:0);if(!mask)continue;
+  const uf=b0?vx-FWT:b2?FS-1-(vx-FWT):b1?vy-FWT:FS-1-(vy-FWT),u=Math.floor(uf/RES),BB=Math.round(3*RES);
+  for(let z=0;z<Z;z++){let c;const zl=Math.floor((z-FFT)/RES);if(z<FFT)c=0xcfc3b8;else if(z<FFT+BB&&wp.k!='wains'&&wp.k!='twotone')c=z>=FFT+BB-Math.max(1,Math.round(RES))?0xe8e2d8:0xf6f2ea;else c=wp.f(u,zl,st.wall.m,st.wall.s);if(z==Z-1)c=sh(st.wall.m,.62);set(vx,vy,z,c,0,0,mask)}}
  for(const it of st.items)drawItem(G,it,set);
 }
 const rotN=(n,k)=>k==0?n:k==1?[-n[1],n[0],n[2]]:k==2?[-n[0],-n[1],n[2]]:[n[1],-n[0],n[2]];
 function drawItem(G,it,set){
  const D=DEF[it.k];if(!D)return;let emit,lc;
- const s=it.sc||1;
- if(D.wall){G.itemWall[it.id]=1<<it.wall;emit=(lx,ly,lz,c,m,n)=>{const [a0,a1]=spanS(lx,s),[z0,z1]=spanS(lz,s);const nn=n&&rotN(n,it.wall);for(let a=a0;a<a1;a++)for(let z=z0;z<z1;z++){const [x,y]=wallXY(it.wall,it.u+a,ly);set(x+WT,y+WT,FT+it.z+z,c,m,it.id,0,nn)}};lc=(lx,ly,lz,c,rad,pw)=>{const [x,y]=wallXYc(it.wall,it.u+lx*s,ly);G.lights.push({x:x+WT,y:y+WT,z:FT+it.z+lz*s,c,r:rad*Math.sqrt(s),p:pw,id:it.id})}}
- else{emit=(lx,ly,lz,c,m,n)=>{const [rx,ry]=rotLocal(lx,ly,D.w,D.d,it.r);const [x0,x1]=spanS(rx,s),[y0,y1]=spanS(ry,s),[z0,z1]=spanS(lz,s);const nn=n&&rotN(n,it.r);for(let z=z0;z<z1;z++)for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)set(it.x+x+WT,it.y+y+WT,FT+it.z+z,c,m,it.id,0,nn)};lc=(lx,ly,lz,c,rad,pw)=>{const [rx,ry]=rotLocalC(lx,ly,D.w,D.d,it.r);G.lights.push({x:it.x+rx*s+WT,y:it.y+ry*s+WT,z:FT+it.z+lz*s,c,r:rad*Math.sqrt(s),p:pw,id:it.id})}}
- D.f(mkB(emit,lc),it.m,it.s);
+ const s=it.sc||1,Wf=Math.round(D.w*RES),Df=Math.round(D.d*RES),zb=FFT+Math.round(it.z*RES);
+ if(D.wall){G.itemWall[it.id]=1<<it.wall;const ub=Math.round(it.u*RES);emit=(lx,ly,lz,c,m,n)=>{const [a0,a1]=spanS(lx,s),[z0,z1]=spanS(lz,s);const nn=n&&rotN(n,it.wall);for(let a=a0;a<a1;a++)for(let z=z0;z<z1;z++){const [x,y]=wallXYf(it.wall,ub+a,ly);set(x+FWT,y+FWT,zb+z,c,m,it.id,0,nn)}};lc=(lx,ly,lz,c,rad,pw)=>{const [x,y]=wallXYcf(it.wall,ub+lx*s,ly);G.lights.push({x:x+FWT,y:y+FWT,z:zb+lz*s,c,r:rad*Math.sqrt(s),p:pw,id:it.id})}}
+ else{const xb=Math.round(it.x*RES),yb=Math.round(it.y*RES);emit=(lx,ly,lz,c,m,n)=>{const [rx,ry]=rotLocal(lx,ly,Wf,Df,it.r);const [x0,x1]=spanS(rx,s),[y0,y1]=spanS(ry,s),[z0,z1]=spanS(lz,s);const nn=n&&rotN(n,it.r);for(let z=z0;z<z1;z++)for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)set(xb+x+FWT,yb+y+FWT,zb+z,c,m,it.id,0,nn)};lc=(lx,ly,lz,c,rad,pw)=>{const [rx,ry]=rotLocalC(lx,ly,Wf,Df,it.r);G.lights.push({x:xb+rx*s+FWT,y:yb+ry*s+FWT,z:zb+lz*s,c,r:rad*Math.sqrt(s),p:pw,id:it.id})}}
+ D.f(mkBS(emit,lc,RES),it.m,it.s);
 }
+const wallXYf=(w,a,ly)=>w==0?[a,ly]:w==1?[FS-1-ly,a]:w==2?[FS-1-a,FS-1-ly]:[ly,FS-1-a];
+const wallXYcf=(w,a,ly)=>w==0?[a,ly]:w==1?[FS-ly,a]:w==2?[FS-a,FS-ly]:[ly,FS-a];
 // camera basis
 function camBasis(ang){const ph=ang-Math.PI/4;return{rx:Math.cos(ph),ry:Math.sin(ph),fx:Math.sin(ph),fy:-Math.cos(ph)}}
 function visMask(ang){const {fx,fy}=camBasis(ang);return (fy<-.02?1:0)|(fx>.02?2:0)|(fy>.02?4:0)|(fx<-.02?8:0)}
 const R2=Math.SQRT2,NRM=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1]];
 const LW=(()=>{const v=[-.45,-.3,1],l=Math.hypot(...v);return v.map(a=>a/l)})(),LHx=-.83,LHy=-.55;
-const HIDE=new Uint8Array(65536);let SOFTB=new Uint8Array(1);
+const HIDE=new Uint8Array(65536);const BAY=[.125,.625,.875,.375];let SOFTB=new Uint8Array(1);
 const LSv=(()=>{const v=[-.35,-.25,.9],l=Math.hypot(...v);return v.map(a=>a/l)})(),LSx=LSv[0],LSy=LSv[1],LSz=LSv[2];
 function render(G,o){
  const {X,Y,Z,col,mat,ids,wm}=G,W=o.W,H=o.H,step=o.step||1,P=o.P||LIGHTS[0];
  const buf=o.buf,idb=o.idb,tb=o.tb,data=o.img.data,lights=G.lights,lamps=P.lamps;
  const {rx,ry,fx,fy}=camBasis(o.ang||0);const vis=o.all?15:visMask(o.ang||0);
  HIDE.fill(0);if(!o.all)for(const id in G.itemWall)if(!(G.itemWall[id]&vis))HIDE[id]=1;
- const LOWZ=FT+3;
+ const LOWZ=FFT+Math.round(3*RES),RS=o.res||RES;
  const solidAt=(x,y,z)=>{if(x<0||y<0||z<0||x>=X||y>=Y||z>=Z)return 0;const i=(z*Y+y)*X+x,c=col[i];if(!c)return 0;const w=wm[i];if(w&&!(w&vis)&&z>=LOWZ)return 0;if(HIDE[ids[i]])return 0;const m=mat[i];return m===3||m===2?0:1};
- const shadowTest=(x,y,z)=>{const sx=LW[0]*.6,sy=LW[1]*.6,sz=LW[2]*.6;for(let s=0;s<95;s++){x+=sx;y+=sy;z+=sz;if(x<0||y<0||z<0||x>=X||y>=Y||z>=Z)return false;const i=((z|0)*Y+(y|0))*X+(x|0);if(col[i]&&ids[i]>0&&mat[i]!==3&&!HIDE[ids[i]])return true}return false};
+ const shadowTest=(x,y,z,self)=>{const sx=LW[0]*.6,sy=LW[1]*.6,sz=LW[2]*.6;for(let s=0,sn=Math.round(95*RES);s<sn;s++){x+=sx;y+=sy;z+=sz;if(x<0||y<0||z<0||x>=X||y>=Y||z>=Z)return false;const i=((z|0)*Y+(y|0))*X+(x|0);if(col[i]&&ids[i]>0&&mat[i]!==3&&!HIDE[ids[i]]&&ids[i]!==self)return true}return false};
  const dx=R2*fx,dy=R2*fy,dz=-1,cx=o.cx,cy=o.cy,cz=o.cz,zoom=o.zoom||1;
  const sX=dx>0?1:-1,sY=dy>0?1:-1,tdX=Math.abs(dx)>1e-9?1/Math.abs(dx):1e30,tdY=Math.abs(dy)>1e-9?1/Math.abs(dy):1e30;
  const am=P.amb;if(SOFTB.length<W*H)SOFTB=new Uint8Array(W*H);const softB=SOFTB;
@@ -931,14 +948,14 @@ function render(G,o){
   else{const c=col[hit]&0xffffff,m=mat[hit],hx=x0+dx*tE,hy=y0+dy*tE,hz=z0+dz*tE,N=NRM[face];let r,g,b;
    if(m===1){r=R(c);g=Gc(c);b=Bc(c);if(lamps<.3){r=r*.9+22;g=g*.9+22;b=b*.9+22}}
    else if(m===2){const u=ix+iy,zz=iz;let cc;if(P.sky=='night'){const h=hash(u,zz,5);cc=h<.03?0xfff3c4:mix(0x1a2350,0x2d3a78,zz/Z)}else if(P.sky=='sunset'){cc=mix(0xffd08a,0xff7a8a,zz/Z);if(Math.sin(u*.35+zz*.2)+Math.sin(u*.13-zz*.5)>1.3)cc=0xffe0c0}else if(P.sky=='rain'){cc=mix(0x9aa4b4,0x7a8494,zz/Z);if((u*3+zz*7)%11==0)cc=0xd0d8e8}else{const cl2=Math.sin(u*.35+zz*.2)+Math.sin(u*.13-zz*.5)>1.1;cc=cl2?0xffffff:mix(0x8fd0f8,0xd6f0ff,(Z-zz)/Z)}r=R(cc);g=Gc(cc);b=Bc(cc)}
-   else{const sn=G.nx[hit]|G.ny[hit]|G.nz[hit];let NN=N,k;if(sn){NN=[G.nx[hit]/120,G.ny[hit]/120,G.nz[hit]/120];const dl=NN[0]*LSx+NN[1]*LSy+NN[2]*LSz;k=.58+.42*Math.max(0,dl)+.05*Math.max(0,-NN[2]);k=Math.round(k/.05)*.05;softB[p]=1}else{k=face===4?1:.6+.32*Math.max(0,N[0]*LHx+N[1]*LHy);softB[p]=0}
+   else{const sn=G.nx[hit]|G.ny[hit]|G.nz[hit];let NN=N,k;if(sn){NN=[G.nx[hit]/120,G.ny[hit]/120,G.nz[hit]/120];const dl=NN[0]*LSx+NN[1]*LSy+NN[2]*LSz;k=.58+.42*Math.max(0,dl)+.05*Math.max(0,-NN[2]);k=Math.floor(k/.045+BAY[(py&1)*2+(px&1)])*.045;softB[p]=1}else{k=face===4?1:.6+.32*Math.max(0,N[0]*LHx+N[1]*LHy);softB[p]=0}
     let lx=ix+N[0],ly=iy+N[1],lz=iz+N[2],u,v,aO;
     if(face===4){u=hx-ix;v=hy-iy;aO=solidAt(lx-1,ly,lz)*(1-u)+solidAt(lx+1,ly,lz)*u+solidAt(lx,ly-1,lz)*(1-v)+solidAt(lx,ly+1,lz)*v+.5*(solidAt(lx-1,ly-1,lz)*(1-u)*(1-v)+solidAt(lx+1,ly-1,lz)*u*(1-v)+solidAt(lx-1,ly+1,lz)*(1-u)*v+solidAt(lx+1,ly+1,lz)*u*v)}
     else if(face<2){u=hy-iy;v=hz-iz;aO=solidAt(lx,ly-1,lz)*(1-u)+solidAt(lx,ly+1,lz)*u+solidAt(lx,ly,lz-1)*(1-v)+solidAt(lx,ly,lz+1)*v}
     else{u=hx-ix;v=hz-iz;aO=solidAt(lx-1,ly,lz)*(1-u)+solidAt(lx+1,ly,lz)*u+solidAt(lx,ly,lz-1)*(1-v)+solidAt(lx,ly,lz+1)*v}
     const ao=sn?Math.max(.85,1-.05*aO):Math.max(.55,1-.2*aO);k*=ao;
     const nl=NN[0]*LW[0]+NN[1]*LW[1]+NN[2]*LW[2];
-    if(nl>0&&P.shd<1&&o.shadow&&shadowTest(hx+N[0]*.05,hy+N[1]*.05,hz+N[2]*.05))k*=P.shd;
+    if(nl>0&&P.shd<1&&o.shadow&&shadowTest(hx+N[0]*.05,hy+N[1]*.05,hz+N[2]*.05,sn?ids[hit]:-1))k*=P.shd;
     let lr=k*am[0],lg=k*am[1],lb=k*am[2];
     if(lamps>0){if(m===GL&&lamps>.4){lr+=.75*lamps;lg+=.72*lamps;lb+=.6*lamps}
      for(let q=0;q<lights.length;q++){const Lq=lights[q];if(HIDE[Lq.id])continue;const ddx=Lq.x-hx,ddy=Lq.y-hy,ddz=Lq.z-hz,d2=ddx*ddx+ddy*ddy+ddz*ddz,rr=Lq.r*Lq.r;if(d2>=rr)continue;const d=Math.sqrt(d2)+.001;let lam=(NN[0]*ddx+NN[1]*ddy+NN[2]*ddz)/d;lam=lam<0?.12:.12+.88*lam;const f=1-d/Lq.r,qq=f*f*lam*Lq.p*ao*1.6*lamps;lr+=qq*R(Lq.c)/255;lg+=qq*Gc(Lq.c)/255;lb+=qq*Bc(Lq.c)/255}}
@@ -948,8 +965,8 @@ function render(G,o){
   if(step===1){buf[p]=outc;idb[p]=oid;tb[p]=ot}else{for(let yy=py;yy<Math.min(H,py+step);yy++)for(let xx=px;xx<Math.min(W,px+step);xx++){const q=yy*W+xx;buf[q]=outc;idb[q]=oid;tb[q]=ot}}}}
  for(let py=0;py<H;py++)for(let px=0;px<W;px++){const p=py*W+px,id=idb[p];let c=buf[p],a=255;
   if(id<0&&!o.bg)a=0;
-  if(step===1){if(o.sel&&id!==o.sel){let s=false;if(px>0&&idb[p-1]===o.sel&&tb[p-1]<tb[p])s=true;else if(px<W-1&&idb[p+1]===o.sel&&tb[p+1]<tb[p])s=true;else if(py>0&&idb[p-W]===o.sel&&tb[p-W]<tb[p])s=true;else if(py<H-1&&idb[p+W]===o.sel&&tb[p+W]<tb[p])s=true;if(s){c=0xffe14a;a=255}}
-   else if(id>0){let e=0;const chk=q=>{const j=idb[q];if(j!==id&&(j<0||tb[q]>tb[p]+1.5))e=2;else if(j===id&&tb[q]>tb[p]+3&&e<1)e=1};if(px>0)chk(p-1);if(px<W-1)chk(p+1);if(py>0)chk(p-W);if(py<H-1)chk(p+W);const so=softB[p];if(e==2)c=sh(c,so?.8:.58);else if(e==1&&!so)c=sh(c,.82)}}
+  if(step===1){if(o.sel&&id!==o.sel){let s=false;const SW=RS>1.2?2:1;for(let dd=1;dd<=SW&&!s;dd++){if(px>=dd&&idb[p-dd]===o.sel&&tb[p-dd]<tb[p])s=true;else if(px<W-dd&&idb[p+dd]===o.sel&&tb[p+dd]<tb[p])s=true;else if(py>=dd&&idb[p-W*dd]===o.sel&&tb[p-W*dd]<tb[p])s=true;else if(py<H-dd&&idb[p+W*dd]===o.sel&&tb[p+W*dd]<tb[p])s=true}if(s){c=0xffe14a;a=255}}
+   else if(id>0){let e=0;const chk=q=>{const j=idb[q];if(j!==id&&(j<0||tb[q]>tb[p]+1.5*RS))e=2;else if(j===id&&tb[q]>tb[p]+3*RS&&e<1)e=1};if(px>0)chk(p-1);if(px<W-1)chk(p+1);if(py>0)chk(p-W);if(py<H-1)chk(p+W);const so=softB[p];if(e==2)c=sh(c,so?.8:.58);else if(e==1&&!so)c=sh(c,.82)}}
   const d=p*4;data[d]=R(c);data[d+1]=Gc(c);data[d+2]=Bc(c);data[d+3]=a}
 }
 function thumbGrid(D){const vs=[];const emit=(x,y,z,c,m,n)=>vs.push([x,y,z,c,m,n]);
@@ -958,7 +975,7 @@ function thumbGrid(D){const vs=[];const emit=(x,y,z,c,m,n)=>vs.push([x,y,z,c,m,n
  let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];vs.forEach(v=>{for(let i=0;i<3;i++){if(v[i]<mn[i])mn[i]=v[i];if(v[i]>mx[i])mx[i]=v[i]}});
  const X=mx[0]-mn[0]+1,Y=mx[1]-mn[1]+1,Z=mx[2]-mn[2]+1,G=makeGrid(X,Y,Z);
  vs.forEach(v=>{const i=((v[2]-mn[2])*Y+(v[1]-mn[1]))*X+(v[0]-mn[0]);G.col[i]=(v[3]&0xffffff)|FLAG;G.mat[i]=v[4];if(v[5]){G.nx[i]=Math.round(v[5][0]*120);G.ny[i]=Math.round(v[5][1]*120);G.nz[i]=Math.round(v[5][2]*120)||((v[5][0]||v[5][1])?0:1)}else{G.nx[i]=0;G.ny[i]=0;G.nz[i]=0}G.ids[i]=1});return G}
-function renderThumb(D){const G=thumbGrid(D);const W=2*(G.X+G.Y)+4,H=G.X+G.Y+2*G.Z+4;const img={data:new Uint8ClampedArray(W*H*4),width:W,height:H};render(G,{W,H,scx:W/2,scy:H/2,cx:G.X/2,cy:G.Y/2,cz:G.Z/2,zoom:1,ang:0,all:true,buf:new Uint32Array(W*H),idb:new Int32Array(W*H),tb:new Float32Array(W*H),img,shadow:true,bg:null,sel:0,P:LIGHTS[0]});return img}
+function renderThumb(D){const G=thumbGrid(D);const W=2*(G.X+G.Y)+4,H=G.X+G.Y+2*G.Z+4;const img={data:new Uint8ClampedArray(W*H*4),width:W,height:H};render(G,{W,H,scx:W/2,scy:H/2,cx:G.X/2,cy:G.Y/2,cz:G.Z/2,zoom:1,ang:0,all:true,buf:new Uint32Array(W*H),idb:new Int32Array(W*H),tb:new Float32Array(W*H),img,shadow:true,bg:null,sel:0,P:LIGHTS[0],res:1});return img}
 // ===== END ENGINE =====
 
 // ---------- pixel text ----------
@@ -997,16 +1014,16 @@ function bgmTick(){const e=.375;while(bgmNext<AC.currentTime+.4){const t=bgmNext
 // ---------- app ----------
 const CATS=[['mood','방 분위기'],['wp','벽지'],['fl','바닥'],['bed','침대'],['sofa','소파·의자'],['desk','책상·테이블'],['store','수납'],['rug','러그'],['light','조명 가구'],['plant','식물'],['wall','벽 장식'],['prop','소품']];
 const SW=[0xffffff,0xf3efe6,0xe9dcc8,0xffd9e4,0xf27fb2,0xe8505b,0xd7263d,0xf7a541,0xf9d65c,0xc8e6a0,0x6cc08b,0x2f7d4a,0x9fe3d6,0x9fd3f5,0x4aa3df,0x2b4c8c,0xc9b6f2,0x8e6fd8,0xc89a6a,0x9a6a44,0x5a3d2b,0xbcb8b0,0x6a6a72,0x2b2b33];
-const W=340,H=300,SCX=W/2,SCY=168,CZ=21;
+setRes(1.5);const W=Math.round(340*RES),H=Math.round(300*RES),SCX=W/2,SCY=Math.round(168*RES),CZ=21*RES;
 const cv=document.getElementById('cv');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');
-const IMG=ctx.createImageData(W,H);const RB={W,H,buf:new Uint32Array(W*H),idb:new Int32Array(W*H),tb:new Float32Array(W*H),img:IMG,shadow:true,cx:GX/2,cy:GY/2,cz:CZ};
-const GRID=makeGrid(GX,GY,GZ);
+const IMG=ctx.createImageData(W,H);const RB={W,H,buf:new Uint32Array(W*H),idb:new Int32Array(W*H),tb:new Float32Array(W*H),img:IMG,shadow:true,cx:FGX/2,cy:FGY/2,cz:CZ};
+const GRID=makeGrid(FGX,FGY,FGZ);
 const hex=c=>'#'+c.toString(16).padStart(6,'0'),unhex=s=>parseInt(s.slice(1),16);
 let nid=1;
 function mk(k,o){const D=DEF[k];const it={id:nid++,k,m:D.m,s:D.s,z:0,...o};if(D.wall){it.wall=it.wall??0;it.u=it.u??Math.round((S-D.w)/2);it.z=o&&o.z!=null?o.z:D.z0}else{it.r=it.r||0;it.x=it.x??20;it.y=it.y??20}return it}
 function defState(){nid=1;return{ang:0,zoom:1,panX:0,panY:0,light:'sun',wall:{p:'plain',m:0xf3e6d8,s:0xffffff},floor:{p:'wood',m:0xc89a6a,s:0x8a5a3a},items:[]}}
 let st;try{st=JSON.parse(localStorage.getItem('pixroom2'))}catch(e){}
-if(!st||!st.items){st=defState()}else{st.ang=0;st.items=st.items.filter(i=>DEF[i.k]);nid=Math.max(0,...st.items.map(i=>i.id))+1}
+if(!st||!st.items){st=defState()}else{st.ang=0;st.zoom=1;st.panX=0;st.panY=0;st.items=st.items.filter(i=>DEF[i.k]);nid=Math.max(0,...st.items.map(i=>i.id))+1}
 let sel=0,tab='mood',pend=false,dirtyWorld=true,lowres=false;
 const find=id=>st.items.find(i=>i.id===id);
 const LP=()=>LIGHTS.find(l=>l.k==st.light)||LIGHTS[0];
@@ -1073,10 +1090,10 @@ function gridUI(){const g=$('grid');let L,n;
 function addItem(k){const D=DEF[k];let it;if(D.wall){const v=visWalls();const cnt=w=>st.items.filter(i=>i.wall===w&&DEF[i.k].wall).length;const w=v.sort((a,b)=>cnt(a)-cnt(b))[0]??0;it=mk(k,{wall:w})}else{it=mk(k,{});it.x=Math.round((S-D.w)/2);it.y=Math.round((S-D.d)/2)}clampIt(it);st.items.push(it);sel=it.id;SFX.add();changed()}
 // ---------- gestures ----------
 function pix(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
-function floorPt(px,py,zz){const b=B_(),a=(px-SCX-st.panX)/st.zoom,bb=(py-SCY-st.panY)/st.zoom,zp=FT+zz;const A=a/(2*R2),Bv=-(bb+2*(zp-CZ))/R2;return[GX/2+b.rx*A+b.fx*Bv-WT,GY/2+b.ry*A+b.fy*Bv-WT]}
+function floorPt(px,py,zz){const b=B_(),a=(px-SCX-st.panX)/st.zoom,bb=(py-SCY-st.panY)/st.zoom,zp=FFT+zz*RES;const A=a/(2*R2),Bv=-(bb+2*(zp-CZ))/R2;return[(FGX/2+b.rx*A+b.fx*Bv-FWT)/RES,(FGY/2+b.ry*A+b.fy*Bv-FWT)/RES]}
 const PTR=new Map();let G0=null;
 function zoomAt(nz,px,py){nz=Math.max(.7,Math.min(4,nz));const ax=(px-SCX-st.panX)/st.zoom,ay=(py-SCY-st.panY)/st.zoom;st.zoom=nz;st.panX=px-SCX-ax*nz;st.panY=py-SCY-ay*nz;clampPan()}
-function clampPan(){const m=170*st.zoom;st.panX=Math.max(-m,Math.min(m,st.panX));st.panY=Math.max(-m,Math.min(m,st.panY))}
+function clampPan(){const m=170*RES*st.zoom;st.panX=Math.max(-m,Math.min(m,st.panX));st.panY=Math.max(-m,Math.min(m,st.panY))}
 cv.addEventListener('pointerdown',e=>{firstGesture();const [px,py]=pix(e);PTR.set(e.pointerId,{x:px,y:py,cx:e.clientX});cv.setPointerCapture(e.pointerId);
  if(PTR.size===2){const [p1,p2]=[...PTR.values()];G0={mode:'pinch',d:Math.hypot(p1.x-p2.x,p1.y-p2.y),mx:(p1.x+p2.x)/2,my:(p1.y+p2.y)/2,zoom:st.zoom,panX:st.panX,panY:st.panY};return}
  if(PTR.size>2)return;const id=RB.idb[(py|0)*W+(px|0)];
@@ -1095,7 +1112,7 @@ let started=false;function firstGesture(){if(started)return;started=true;if(bgmO
 document.addEventListener('pointerdown',firstGesture,{capture:true});
 $('bgm').onclick=()=>{bgmOn=!bgmOn;try{localStorage.setItem('pixroom_bgm',bgmOn?'1':'0')}catch(e){}if(bgmOn)bgmStart();else bgmStop();SFX.tab();ui()};
 $('reset').onclick=()=>{const b=$('reset');if(b.dataset.c){st=defState();sel=0;delete b.dataset.c;b.innerHTML=PT('비우기',16);SFX.del();changed();return}b.dataset.c=1;b.innerHTML=PT('정말요?',16,'#e8505b');setTimeout(()=>{delete b.dataset.c;b.innerHTML=PT('비우기',16)},2500)};
-$('photo').onclick=()=>{SFX.add();const s0=sel;sel=0;if(dirtyWorld){buildWorld(GRID,st);dirtyWorld=false}const P=LP();Object.assign(RB,{ang:st.ang,zoom:st.zoom,scx:SCX+st.panX,scy:SCY+st.panY,sel:0,P,bg:null,step:1});render(GRID,RB);const tc=document.createElement('canvas');tc.width=W;tc.height=H;tc.getContext('2d').putImageData(IMG,0,0);const ar=Math.max(1,(window.innerHeight||800)/(window.innerWidth||400));const c=document.createElement('canvas');c.width=W*4;c.height=Math.round(W*4*ar);const x=c.getContext('2d');const gr=x.createLinearGradient(0,0,0,c.height);gr.addColorStop(0,hex(P.bg[0]));gr.addColorStop(1,hex(P.bg[1]));x.fillStyle=gr;x.fillRect(0,0,c.width,c.height);x.imageSmoothingEnabled=false;const rw=Math.round(W*3.6),rh=Math.round(H*3.6);x.drawImage(tc,Math.round((c.width-rw)/2),Math.round((c.height-rh)/2.3),rw,rh);FINAL=c;$('shot').src=c.toDataURL('image/png');$('mtxt').innerHTML='';$('modal').style.background=`linear-gradient(${hex(P.bg[0])},${hex(P.bg[1])})`;$('modal').classList.add('on');sel=s0;draw()};
+$('photo').onclick=()=>{SFX.add();const s0=sel;sel=0;if(dirtyWorld){buildWorld(GRID,st);dirtyWorld=false}const P=LP();Object.assign(RB,{ang:st.ang,zoom:st.zoom,scx:SCX+st.panX,scy:SCY+st.panY,sel:0,P,bg:null,step:1});render(GRID,RB);const tc=document.createElement('canvas');tc.width=W;tc.height=H;tc.getContext('2d').putImageData(IMG,0,0);const ar=Math.max(1,(window.innerHeight||800)/(window.innerWidth||400));const c=document.createElement('canvas');c.width=W*3;c.height=Math.round(W*3*ar);const x=c.getContext('2d');const gr=x.createLinearGradient(0,0,0,c.height);gr.addColorStop(0,hex(P.bg[0]));gr.addColorStop(1,hex(P.bg[1]));x.fillStyle=gr;x.fillRect(0,0,c.width,c.height);x.imageSmoothingEnabled=false;const rw=Math.round(W*2.7),rh=Math.round(H*2.7);x.drawImage(tc,Math.round((c.width-rw)/2),Math.round((c.height-rh)/2.3),rw,rh);FINAL=c;$('shot').src=c.toDataURL('image/png');$('mtxt').innerHTML='';$('modal').style.background=`linear-gradient(${hex(P.bg[0])},${hex(P.bg[1])})`;$('modal').classList.add('on');sel=s0;draw()};
 let FINAL=null,DL;(async()=>{try{DL=window.claude?await window.claude.use('downloads'):null}catch(e){DL=null}})();
 $('msave').onclick=async()=>{SFX.tab();if(!FINAL)return;const msg=t=>{$('mtxt').innerHTML=PT(t,14,'#3a2e44')};if(!DL&&window.claude){try{DL=await window.claude.use('downloads')}catch(e){}}if(!DL){try{const bl=await new Promise(r=>FINAL.toBlob(r,'image/png'));const url=URL.createObjectURL(bl);const an=document.createElement('a');an.href=url;an.download='my-pixel-room.png';document.body.appendChild(an);an.click();an.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);msg('저장했어요!');SFX.add()}catch(e){msg('저장하지 못했어요 · 화면을 캡처해 주세요')}return}const blob=await new Promise(r=>FINAL.toBlob(r,'image/png'));try{await DL.save({filename:'my-pixel-room.png',data:blob});msg('저장했어요!');SFX.add()}catch(e){msg(e&&e.code==='declined'?'저장을 취소했어요':'저장하지 못했어요 · 화면을 캡처해 주세요')}};
 $('mclose').onclick=()=>{SFX.tab();$('modal').classList.remove('on')};
