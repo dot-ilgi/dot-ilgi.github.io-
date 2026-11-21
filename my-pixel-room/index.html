@@ -105,12 +105,12 @@ const T={
 };
 // ---------- builder ----------
 function mkB(emit,lcb){
- const V=(x,y,z,c,m)=>{x=Math.floor(x);y=Math.floor(y);z=Math.floor(z);emit(x,y,z,typeof c==="function"?c(x,y,z):c,m||0)};
+ const V=(x,y,z,c,m,n)=>{x=Math.floor(x);y=Math.floor(y);z=Math.floor(z);emit(x,y,z,typeof c==="function"?c(x,y,z):c,m||0,n)};
  const B={
   v:V,
   box(x,y,z,w,d,h,c,m){for(let k=z;k<z+h;k++)for(let j=y;j<y+d;j++)for(let i=x;i<x+w;i++)V(i,j,k,c,m)},
   cyl(cx,cy,z,r,h,c,m,ri,keep){const r2=r*r,q=ri?ri*ri:-1;for(let j=Math.floor(cy-r-1);j<=Math.ceil(cy+r);j++)for(let i=Math.floor(cx-r-1);i<=Math.ceil(cx+r);i++){const dx=i+.5-cx,dy=j+.5-cy,d=dx*dx+dy*dy;if(d<=r2&&d>=q)for(let k=z;k<z+h;k++)if(!keep||keep(i,j,k))V(i,j,k,c,m)}},
-  ell(cx,cy,cz,rx,ry,rz,c,m,keep,shell){for(let k=Math.floor(cz-rz-1);k<=Math.ceil(cz+rz);k++)for(let j=Math.floor(cy-ry-1);j<=Math.ceil(cy+ry);j++)for(let i=Math.floor(cx-rx-1);i<=Math.ceil(cx+rx);i++){const a=(i+.5-cx)/rx,b=(j+.5-cy)/ry,e=(k+.5-cz)/rz,d=a*a+b*b+e*e;if(d<=1&&(!shell||d>=shell)&&(!keep||keep(i,j,k)))V(i,j,k,c,m)}},
+  ell(cx,cy,cz,rx,ry,rz,c,m,keep,shell){for(let k=Math.floor(cz-rz-1);k<=Math.ceil(cz+rz);k++)for(let j=Math.floor(cy-ry-1);j<=Math.ceil(cy+ry);j++)for(let i=Math.floor(cx-rx-1);i<=Math.ceil(cx+rx);i++){const a=(i+.5-cx)/rx,b=(j+.5-cy)/ry,e=(k+.5-cz)/rz,d=a*a+b*b+e*e;if(d<=1&&(!shell||d>=shell)&&(!keep||keep(i,j,k))){let gx=a/rx,gy=b/ry,gz=e/rz;const l=Math.hypot(gx,gy,gz)||1;V(i,j,k,c,m,[gx/l,gy/l,gz/l])}}},
   cone(cx,cy,z,r0,r1,h,c,m,hol){for(let k=0;k<h;k++){const r=r0+(r1-r0)*(h<2?0:k/(h-1));B.cyl(cx,cy,z+k,r,1,c,m,hol?Math.max(0,r-hol):0)}},
   line(x0,y0,z0,x1,y1,z1,c,m,r){const n=Math.ceil(Math.max(Math.abs(x1-x0),Math.abs(y1-y0),Math.abs(z1-z0))*2)+1;for(let t=0;t<=n;t++){const f=t/n,x=x0+(x1-x0)*f,y=y0+(y1-y0)*f,z=z0+(z1-z0)*f;if(r&&r>=.9)B.ell(x,y,z,r,r,r,c,m);else V(x,y,z,c,m)}},
   bez(p0,p1,p2,c,m,r){let prev=p0;const n=30;for(let t=1;t<=n;t++){const f=t/n,g=1-f,p=[0,1,2].map(i=>g*g*p0[i]+2*g*f*p1[i]+f*f*p2[i]);B.line(prev[0],prev[1],prev[2],p[0],p[1],p[2],c,m,r);prev=p}},
@@ -872,10 +872,10 @@ const LIGHTS=[
  {k:'aurora',n:'오로라',e:'🌌',amb:[.3,.5,.52],shd:1,lamps:.9,bg:[0x0a2a3a,0x2a1a4a],sky:'night'},
 ];
 if(typeof LIGHTS3!=='undefined')LIGHTS.push(...LIGHTS3);
-function makeGrid(X,Y,Z){const n=X*Y*Z;return{X,Y,Z,col:new Uint32Array(n),mat:new Uint8Array(n),ids:new Uint16Array(n),wm:new Uint8Array(n),lights:[],itemWall:{}}}
+function makeGrid(X,Y,Z){const n=X*Y*Z;return{X,Y,Z,nx:new Int8Array(n),ny:new Int8Array(n),nz:new Int8Array(n),col:new Uint32Array(n),mat:new Uint8Array(n),ids:new Uint16Array(n),wm:new Uint8Array(n),lights:[],itemWall:{}}}
 function buildWorld(G,st){
- const {X,Y,Z,col,mat,ids,wm}=G;col.fill(0);mat.fill(0);ids.fill(0);wm.fill(0);G.lights=[];G.itemWall={};
- const set=(x,y,z,c,m,id,w)=>{if(x<0||y<0||z<0||x>=X||y>=Y||z>=Z)return;const i=(z*Y+y)*X+x;col[i]=(c&0xffffff)|FLAG;mat[i]=m;ids[i]=id;wm[i]=w||0};
+ const {X,Y,Z,col,mat,ids,wm}=G;col.fill(0);G.nx.fill(0);G.ny.fill(0);G.nz.fill(0);mat.fill(0);ids.fill(0);wm.fill(0);G.lights=[];G.itemWall={};
+ const set=(x,y,z,c,m,id,w,n)=>{if(x<0||y<0||z<0||x>=X||y>=Y||z>=Z)return;const i=(z*Y+y)*X+x;if(n){G.nx[i]=Math.round(n[0]*120);G.ny[i]=Math.round(n[1]*120);G.nz[i]=Math.round(n[2]*120)||(n[0]||n[1]?0:1)}else{G.nx[i]=0;G.ny[i]=0;G.nz[i]=0}col[i]=(c&0xffffff)|FLAG;mat[i]=m;ids[i]=id;wm[i]=w||0};
  const fp=FLOORS.find(f=>f.k==st.floor.p)||FLOORS[0];
  for(let y=0;y<S;y++)for(let x=0;x<S;x++){const c=fp.f(x,y,st.floor.m,st.floor.s);for(let z=0;z<FT;z++)set(x+WT,y+WT,z,z==FT-1?c:sh(c,.75),0,0,0)}
  const wp=WALLS.find(f=>f.k==st.wall.p)||WALLS[0];
@@ -884,11 +884,12 @@ function buildWorld(G,st){
   for(let z=0;z<Z;z++){let c;if(z<FT)c=0xcfc3b8;else if(z<FT+3&&wp.k!='wains'&&wp.k!='twotone')c=z==FT+2?0xe8e2d8:0xf6f2ea;else c=wp.f(u,z-FT,st.wall.m,st.wall.s);if(z==Z-1)c=sh(st.wall.m,.62);set(vx,vy,z,c,0,0,mask)}}
  for(const it of st.items)drawItem(G,it,set);
 }
+const rotN=(n,k)=>k==0?n:k==1?[-n[1],n[0],n[2]]:k==2?[-n[0],-n[1],n[2]]:[n[1],-n[0],n[2]];
 function drawItem(G,it,set){
  const D=DEF[it.k];if(!D)return;let emit,lc;
  const s=it.sc||1;
- if(D.wall){G.itemWall[it.id]=1<<it.wall;emit=(lx,ly,lz,c,m)=>{const [a0,a1]=spanS(lx,s),[z0,z1]=spanS(lz,s);for(let a=a0;a<a1;a++)for(let z=z0;z<z1;z++){const [x,y]=wallXY(it.wall,it.u+a,ly);set(x+WT,y+WT,FT+it.z+z,c,m,it.id,0)}};lc=(lx,ly,lz,c,rad,pw)=>{const [x,y]=wallXYc(it.wall,it.u+lx*s,ly);G.lights.push({x:x+WT,y:y+WT,z:FT+it.z+lz*s,c,r:rad*Math.sqrt(s),p:pw,id:it.id})}}
- else{emit=(lx,ly,lz,c,m)=>{const [rx,ry]=rotLocal(lx,ly,D.w,D.d,it.r);const [x0,x1]=spanS(rx,s),[y0,y1]=spanS(ry,s),[z0,z1]=spanS(lz,s);for(let z=z0;z<z1;z++)for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)set(it.x+x+WT,it.y+y+WT,FT+it.z+z,c,m,it.id,0)};lc=(lx,ly,lz,c,rad,pw)=>{const [rx,ry]=rotLocalC(lx,ly,D.w,D.d,it.r);G.lights.push({x:it.x+rx*s+WT,y:it.y+ry*s+WT,z:FT+it.z+lz*s,c,r:rad*Math.sqrt(s),p:pw,id:it.id})}}
+ if(D.wall){G.itemWall[it.id]=1<<it.wall;emit=(lx,ly,lz,c,m,n)=>{const [a0,a1]=spanS(lx,s),[z0,z1]=spanS(lz,s);const nn=n&&rotN(n,it.wall);for(let a=a0;a<a1;a++)for(let z=z0;z<z1;z++){const [x,y]=wallXY(it.wall,it.u+a,ly);set(x+WT,y+WT,FT+it.z+z,c,m,it.id,0,nn)}};lc=(lx,ly,lz,c,rad,pw)=>{const [x,y]=wallXYc(it.wall,it.u+lx*s,ly);G.lights.push({x:x+WT,y:y+WT,z:FT+it.z+lz*s,c,r:rad*Math.sqrt(s),p:pw,id:it.id})}}
+ else{emit=(lx,ly,lz,c,m,n)=>{const [rx,ry]=rotLocal(lx,ly,D.w,D.d,it.r);const [x0,x1]=spanS(rx,s),[y0,y1]=spanS(ry,s),[z0,z1]=spanS(lz,s);const nn=n&&rotN(n,it.r);for(let z=z0;z<z1;z++)for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)set(it.x+x+WT,it.y+y+WT,FT+it.z+z,c,m,it.id,0,nn)};lc=(lx,ly,lz,c,rad,pw)=>{const [rx,ry]=rotLocalC(lx,ly,D.w,D.d,it.r);G.lights.push({x:it.x+rx*s+WT,y:it.y+ry*s+WT,z:FT+it.z+lz*s,c,r:rad*Math.sqrt(s),p:pw,id:it.id})}}
  D.f(mkB(emit,lc),it.m,it.s);
 }
 // camera basis
@@ -896,7 +897,8 @@ function camBasis(ang){const ph=ang-Math.PI/4;return{rx:Math.cos(ph),ry:Math.sin
 function visMask(ang){const {fx,fy}=camBasis(ang);return (fy<-.02?1:0)|(fx>.02?2:0)|(fy>.02?4:0)|(fx<-.02?8:0)}
 const R2=Math.SQRT2,NRM=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1]];
 const LW=(()=>{const v=[-.45,-.3,1],l=Math.hypot(...v);return v.map(a=>a/l)})(),LHx=-.83,LHy=-.55;
-const HIDE=new Uint8Array(65536);
+const HIDE=new Uint8Array(65536);let SOFTB=new Uint8Array(1);
+const LSv=(()=>{const v=[-.35,-.25,.9],l=Math.hypot(...v);return v.map(a=>a/l)})(),LSx=LSv[0],LSy=LSv[1],LSz=LSv[2];
 function render(G,o){
  const {X,Y,Z,col,mat,ids,wm}=G,W=o.W,H=o.H,step=o.step||1,P=o.P||LIGHTS[0];
  const buf=o.buf,idb=o.idb,tb=o.tb,data=o.img.data,lights=G.lights,lamps=P.lamps;
@@ -907,7 +909,7 @@ function render(G,o){
  const shadowTest=(x,y,z)=>{const sx=LW[0]*.6,sy=LW[1]*.6,sz=LW[2]*.6;for(let s=0;s<95;s++){x+=sx;y+=sy;z+=sz;if(x<0||y<0||z<0||x>=X||y>=Y||z>=Z)return false;const i=((z|0)*Y+(y|0))*X+(x|0);if(col[i]&&ids[i]>0&&mat[i]!==3&&!HIDE[ids[i]])return true}return false};
  const dx=R2*fx,dy=R2*fy,dz=-1,cx=o.cx,cy=o.cy,cz=o.cz,zoom=o.zoom||1;
  const sX=dx>0?1:-1,sY=dy>0?1:-1,tdX=Math.abs(dx)>1e-9?1/Math.abs(dx):1e30,tdY=Math.abs(dy)>1e-9?1/Math.abs(dy):1e30;
- const am=P.amb;
+ const am=P.amb;if(SOFTB.length<W*H)SOFTB=new Uint8Array(W*H);const softB=SOFTB;
  for(let py=0;py<H;py+=step){const bgc=o.bg?mix(o.bg[0],o.bg[1],py/H):0;for(let px=0;px<W;px+=step){
   const p=py*W+px;const a=(px+.5*step-o.scx)/zoom,b=(py+.5*step-o.scy)/zoom;
   const x0=cx+rx*a/(2*R2)-fx*b/R2,y0=cy+ry*a/(2*R2)-fy*b/R2,z0=cz;
@@ -925,21 +927,21 @@ function render(G,o){
     if(c){const m=mat[i];if(m===3){if(c!==lastG){tr*=.5+.5*R(c)/255;tg*=.5+.5*Gc(c)/255;tbl*=.5+.5*Bc(c)/255;ga+=.07;lastG=c}}else{hit=i;break}}else lastG=-1;
     if(tmX<tmY&&tmX<tmZ){tE=tmX;ix+=sX;tmX+=tdX;face=sX>0?1:0}else if(tmY<tmZ){tE=tmY;iy+=sY;tmY+=tdY;face=sY>0?3:2}else{tE=tmZ;iz--;tmZ+=1;face=4}}}
   let outc,oid=-1,ot=1e9;
-  if(hit<0){outc=o.bg?bgc:0}
+  if(hit<0){outc=o.bg?bgc:0;softB[p]=0}
   else{const c=col[hit]&0xffffff,m=mat[hit],hx=x0+dx*tE,hy=y0+dy*tE,hz=z0+dz*tE,N=NRM[face];let r,g,b;
    if(m===1){r=R(c);g=Gc(c);b=Bc(c);if(lamps<.3){r=r*.9+22;g=g*.9+22;b=b*.9+22}}
    else if(m===2){const u=ix+iy,zz=iz;let cc;if(P.sky=='night'){const h=hash(u,zz,5);cc=h<.03?0xfff3c4:mix(0x1a2350,0x2d3a78,zz/Z)}else if(P.sky=='sunset'){cc=mix(0xffd08a,0xff7a8a,zz/Z);if(Math.sin(u*.35+zz*.2)+Math.sin(u*.13-zz*.5)>1.3)cc=0xffe0c0}else if(P.sky=='rain'){cc=mix(0x9aa4b4,0x7a8494,zz/Z);if((u*3+zz*7)%11==0)cc=0xd0d8e8}else{const cl2=Math.sin(u*.35+zz*.2)+Math.sin(u*.13-zz*.5)>1.1;cc=cl2?0xffffff:mix(0x8fd0f8,0xd6f0ff,(Z-zz)/Z)}r=R(cc);g=Gc(cc);b=Bc(cc)}
-   else{let k=face===4?1:.6+.32*Math.max(0,N[0]*LHx+N[1]*LHy);
+   else{const sn=G.nx[hit]|G.ny[hit]|G.nz[hit];let NN=N,k;if(sn){NN=[G.nx[hit]/120,G.ny[hit]/120,G.nz[hit]/120];const dl=NN[0]*LSx+NN[1]*LSy+NN[2]*LSz;k=.58+.42*Math.max(0,dl)+.05*Math.max(0,-NN[2]);k=Math.round(k/.05)*.05;softB[p]=1}else{k=face===4?1:.6+.32*Math.max(0,N[0]*LHx+N[1]*LHy);softB[p]=0}
     let lx=ix+N[0],ly=iy+N[1],lz=iz+N[2],u,v,aO;
     if(face===4){u=hx-ix;v=hy-iy;aO=solidAt(lx-1,ly,lz)*(1-u)+solidAt(lx+1,ly,lz)*u+solidAt(lx,ly-1,lz)*(1-v)+solidAt(lx,ly+1,lz)*v+.5*(solidAt(lx-1,ly-1,lz)*(1-u)*(1-v)+solidAt(lx+1,ly-1,lz)*u*(1-v)+solidAt(lx-1,ly+1,lz)*(1-u)*v+solidAt(lx+1,ly+1,lz)*u*v)}
     else if(face<2){u=hy-iy;v=hz-iz;aO=solidAt(lx,ly-1,lz)*(1-u)+solidAt(lx,ly+1,lz)*u+solidAt(lx,ly,lz-1)*(1-v)+solidAt(lx,ly,lz+1)*v}
     else{u=hx-ix;v=hz-iz;aO=solidAt(lx-1,ly,lz)*(1-u)+solidAt(lx+1,ly,lz)*u+solidAt(lx,ly,lz-1)*(1-v)+solidAt(lx,ly,lz+1)*v}
-    const ao=Math.max(.55,1-.2*aO);k*=ao;
-    const nl=N[0]*LW[0]+N[1]*LW[1]+N[2]*LW[2];
+    const ao=sn?Math.max(.85,1-.05*aO):Math.max(.55,1-.2*aO);k*=ao;
+    const nl=NN[0]*LW[0]+NN[1]*LW[1]+NN[2]*LW[2];
     if(nl>0&&P.shd<1&&o.shadow&&shadowTest(hx+N[0]*.05,hy+N[1]*.05,hz+N[2]*.05))k*=P.shd;
     let lr=k*am[0],lg=k*am[1],lb=k*am[2];
     if(lamps>0){if(m===GL&&lamps>.4){lr+=.75*lamps;lg+=.72*lamps;lb+=.6*lamps}
-     for(let q=0;q<lights.length;q++){const Lq=lights[q];if(HIDE[Lq.id])continue;const ddx=Lq.x-hx,ddy=Lq.y-hy,ddz=Lq.z-hz,d2=ddx*ddx+ddy*ddy+ddz*ddz,rr=Lq.r*Lq.r;if(d2>=rr)continue;const d=Math.sqrt(d2)+.001;let lam=(N[0]*ddx+N[1]*ddy+N[2]*ddz)/d;lam=lam<0?.12:.12+.88*lam;const f=1-d/Lq.r,qq=f*f*lam*Lq.p*ao*1.6*lamps;lr+=qq*R(Lq.c)/255;lg+=qq*Gc(Lq.c)/255;lb+=qq*Bc(Lq.c)/255}}
+     for(let q=0;q<lights.length;q++){const Lq=lights[q];if(HIDE[Lq.id])continue;const ddx=Lq.x-hx,ddy=Lq.y-hy,ddz=Lq.z-hz,d2=ddx*ddx+ddy*ddy+ddz*ddz,rr=Lq.r*Lq.r;if(d2>=rr)continue;const d=Math.sqrt(d2)+.001;let lam=(NN[0]*ddx+NN[1]*ddy+NN[2]*ddz)/d;lam=lam<0?.12:.12+.88*lam;const f=1-d/Lq.r,qq=f*f*lam*Lq.p*ao*1.6*lamps;lr+=qq*R(Lq.c)/255;lg+=qq*Gc(Lq.c)/255;lb+=qq*Bc(Lq.c)/255}}
     r=R(c)*lr;g=Gc(c)*lg;b=Bc(c)*lb}
    if(ga){r=r*tr+ga*255;g=g*tg+ga*255;b=b*tbl+ga*255}
    outc=rgb(r,g,b);oid=ids[hit];ot=tE}
@@ -947,15 +949,15 @@ function render(G,o){
  for(let py=0;py<H;py++)for(let px=0;px<W;px++){const p=py*W+px,id=idb[p];let c=buf[p],a=255;
   if(id<0&&!o.bg)a=0;
   if(step===1){if(o.sel&&id!==o.sel){let s=false;if(px>0&&idb[p-1]===o.sel&&tb[p-1]<tb[p])s=true;else if(px<W-1&&idb[p+1]===o.sel&&tb[p+1]<tb[p])s=true;else if(py>0&&idb[p-W]===o.sel&&tb[p-W]<tb[p])s=true;else if(py<H-1&&idb[p+W]===o.sel&&tb[p+W]<tb[p])s=true;if(s){c=0xffe14a;a=255}}
-   else if(id>0){let e=0;const chk=q=>{const j=idb[q];if(j!==id&&(j<0||tb[q]>tb[p]+1.5))e=2;else if(j===id&&tb[q]>tb[p]+3&&e<1)e=1};if(px>0)chk(p-1);if(px<W-1)chk(p+1);if(py>0)chk(p-W);if(py<H-1)chk(p+W);if(e==2)c=sh(c,.58);else if(e==1)c=sh(c,.82)}}
+   else if(id>0){let e=0;const chk=q=>{const j=idb[q];if(j!==id&&(j<0||tb[q]>tb[p]+1.5))e=2;else if(j===id&&tb[q]>tb[p]+3&&e<1)e=1};if(px>0)chk(p-1);if(px<W-1)chk(p+1);if(py>0)chk(p-W);if(py<H-1)chk(p+W);const so=softB[p];if(e==2)c=sh(c,so?.8:.58);else if(e==1&&!so)c=sh(c,.82)}}
   const d=p*4;data[d]=R(c);data[d+1]=Gc(c);data[d+2]=Bc(c);data[d+3]=a}
 }
-function thumbGrid(D){const vs=[];const emit=(x,y,z,c,m)=>vs.push([x,y,z,c,m]);
+function thumbGrid(D){const vs=[];const emit=(x,y,z,c,m,n)=>vs.push([x,y,z,c,m,n]);
  if(D.wall){for(let x=-2;x<D.w+2;x++)for(let z=-2;z<D.h+2;z++){vs.push([x,-2,z,0xeae0d4,0]);vs.push([x,-1,z,0xeae0d4,0])}}
  D.f(mkB(emit,null),D.m,D.s);
  let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];vs.forEach(v=>{for(let i=0;i<3;i++){if(v[i]<mn[i])mn[i]=v[i];if(v[i]>mx[i])mx[i]=v[i]}});
  const X=mx[0]-mn[0]+1,Y=mx[1]-mn[1]+1,Z=mx[2]-mn[2]+1,G=makeGrid(X,Y,Z);
- vs.forEach(v=>{const i=((v[2]-mn[2])*Y+(v[1]-mn[1]))*X+(v[0]-mn[0]);G.col[i]=(v[3]&0xffffff)|FLAG;G.mat[i]=v[4];G.ids[i]=1});return G}
+ vs.forEach(v=>{const i=((v[2]-mn[2])*Y+(v[1]-mn[1]))*X+(v[0]-mn[0]);G.col[i]=(v[3]&0xffffff)|FLAG;G.mat[i]=v[4];if(v[5]){G.nx[i]=Math.round(v[5][0]*120);G.ny[i]=Math.round(v[5][1]*120);G.nz[i]=Math.round(v[5][2]*120)||((v[5][0]||v[5][1])?0:1)}else{G.nx[i]=0;G.ny[i]=0;G.nz[i]=0}G.ids[i]=1});return G}
 function renderThumb(D){const G=thumbGrid(D);const W=2*(G.X+G.Y)+4,H=G.X+G.Y+2*G.Z+4;const img={data:new Uint8ClampedArray(W*H*4),width:W,height:H};render(G,{W,H,scx:W/2,scy:H/2,cx:G.X/2,cy:G.Y/2,cz:G.Z/2,zoom:1,ang:0,all:true,buf:new Uint32Array(W*H),idb:new Int32Array(W*H),tb:new Float32Array(W*H),img,shadow:true,bg:null,sel:0,P:LIGHTS[0]});return img}
 // ===== END ENGINE =====
 
