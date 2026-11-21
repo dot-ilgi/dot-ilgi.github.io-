@@ -22,10 +22,9 @@
   color-scheme:light;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg)}
-body{color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.6;letter-spacing:0;
+html,body{margin:0;background:#fff}
+body{color:var(--mint);font-family:var(--f);font-size:16px;line-height:1.6;letter-spacing:0;
   -webkit-font-smoothing:none;-moz-osx-font-smoothing:grayscale;font-smooth:never;
-  background-image:radial-gradient(var(--dot) 1px,transparent 1.5px);background-size:16px 16px;
   padding:max(28px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(32px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
 a{color:inherit;text-decoration:none}
 img{image-rendering:pixelated}
@@ -42,26 +41,26 @@ header{display:flex;align-items:center;gap:16px}
 .logo{width:56px;height:56px;flex:none;display:grid;place-items:center;background:var(--yel)}
 .logo img{width:40px;height:40px}
 .brand{min-width:0;flex:1}
-.brand h1{margin:0;font-size:32px;font-weight:normal;line-height:1.1;color:var(--ink);
-  text-shadow:var(--p) var(--p) 0 var(--yel)}
-.brand p{margin:6px 0 0;font-size:16px;color:var(--pink);word-break:keep-all}
-.brand p b{font-weight:normal;color:var(--ink3)}
+.brand h1{margin:0;font-size:32px;font-weight:normal;line-height:1.1;color:#000;
+  text-shadow:var(--p) var(--p) 0 #b8b8b8}
+.brand p{margin:6px 0 0;font-size:16px;color:var(--mint);word-break:keep-all}
+.brand p b{font-weight:normal;color:var(--mint)}
 .mascot{width:108px;height:auto;flex:none;margin:-12px -6px -8px 0;image-rendering:auto;
   transform-origin:50% 100%;animation:bob 2.4s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-2deg)}}
 
-.hud{display:flex;justify-content:space-between;gap:12px;font-size:16px;color:var(--ink3)}
+.hud{display:flex;justify-content:space-between;gap:12px;font-size:16px;color:var(--mint)}
 .hud span i{font-style:normal;color:var(--mint)}
 
 /* RPG 대화창 */
 .talk{padding:16px 18px 20px}
 .talk .who{position:absolute;top:-18px;left:12px;background:var(--pink);color:var(--line);padding:0 10px;font-size:16px;line-height:28px;
   box-shadow:0 -4px 0 0 var(--line),0 4px 0 0 var(--line),-4px 0 0 0 var(--line),4px 0 0 0 var(--line)}
-.talk p{margin:8px 0 0;color:var(--ink2);word-break:keep-all}
+.talk p{margin:8px 0 0;color:var(--mint);word-break:keep-all}
 .talk .caret{position:absolute;right:14px;bottom:6px;color:var(--yel);animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 
-.label{margin:0 0 16px;font-size:16px;color:var(--pink)}
+.label{margin:0 0 16px;font-size:16px;color:var(--mint)}
 .label::before{content:'▶ '}
 
 .feat{display:block;transition:transform .1s steps(2)}
@@ -70,12 +69,12 @@ header{display:flex;align-items:center;gap:16px}
 .shot{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--surf2);border-bottom:var(--p) solid var(--line)}
 .feat .body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:8px}
 .feat h2{margin:0;font-size:32px;font-weight:normal;line-height:1.2}
-.feat p{margin:0;color:var(--ink2);word-break:keep-all}
+.feat p{margin:0;color:var(--mint);word-break:keep-all}
 .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
 .tags{display:flex;gap:8px;flex-wrap:wrap}
 .tag{color:var(--mint);font-size:16px}
 .tag::before{content:'#'}
-.start{background:var(--yel);color:var(--line);padding:4px 14px;line-height:28px;
+.start{background:var(--yel);color:var(--mint);padding:4px 14px;line-height:28px;
   box-shadow:0 -4px 0 0 var(--line),0 4px 0 0 var(--line),-4px 0 0 0 var(--line),4px 0 0 0 var(--line),4px 8px 0 0 var(--line)}
 .feat:hover .start{background:var(--pink);color:#fff}
 
@@ -86,22 +85,22 @@ header{display:flex;align-items:center;gap:16px}
 .tile:hover .frame,.tile:focus-visible .frame{transform:translate(-4px,-4px)}
 .tile:focus-visible{outline:none}
 .tile b{font-weight:normal;line-height:1.3}
-.tile small{display:block;font-size:16px;color:var(--ink3);margin-top:-8px}
-.empty{width:100%;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--ink3);background:transparent;
+.tile small{display:block;font-size:16px;color:var(--mint);margin-top:-8px}
+.empty{width:100%;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--mint);background:transparent;
   background-image:repeating-linear-gradient(90deg,var(--surf2) 0 8px,transparent 8px 16px),repeating-linear-gradient(90deg,var(--surf2) 0 8px,transparent 8px 16px),repeating-linear-gradient(0deg,var(--surf2) 0 8px,transparent 8px 16px),repeating-linear-gradient(0deg,var(--surf2) 0 8px,transparent 8px 16px);
   background-size:100% 4px,100% 4px,4px 100%,4px 100%;background-position:0 0,0 100%,0 0,100% 0;background-repeat:no-repeat}
 .empty i{font-style:normal;font-size:32px;color:var(--surf2)}
 .bar{width:60%;height:12px;background:var(--surf2);position:relative;overflow:hidden}
 .bar::after{content:'';position:absolute;inset:0;width:40%;background:var(--mint);animation:load 2.4s steps(6) infinite}
 @keyframes load{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
-.tile.soon b{color:var(--ink3)}
+.tile.soon b{color:var(--mint)}
 
 nav{display:flex;padding:8px;gap:8px}
-nav a{flex:1 1 0;min-width:0;text-align:center;padding:8px 0;color:var(--ink2)}
-nav a i{font-style:normal;color:var(--ink3);margin-right:4px}
-nav a:hover,nav a:focus-visible{background:var(--surf2);color:var(--ink);outline:none}
-nav a:hover i,nav a:focus-visible i{color:var(--pink)}
-footer{text-align:center;color:var(--ink3);margin-top:-12px}
+nav a{flex:1 1 0;min-width:0;text-align:center;padding:8px 0;color:var(--mint)}
+nav a i{font-style:normal;color:var(--mint);margin-right:4px}
+nav a:hover,nav a:focus-visible{background:var(--surf2);color:var(--mint);outline:none}
+nav a:hover i,nav a:focus-visible i{color:var(--mint)}
+footer{text-align:center;color:var(--mint);margin-top:-12px}
 @media (max-width:380px){.mascot{width:92px}.brand h1{font-size:24px}.feat h2{font-size:24px}.grid{gap:24px 18px}}
 @media (prefers-reduced-motion:reduce){.feat,.tile .frame{transition:none}.talk .caret,.bar::after,.mascot{animation:none}}
 </style>
