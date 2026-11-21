@@ -14,12 +14,12 @@
 @font-face{font-family:'NeoDunggeunmo';font-weight:normal;font-style:normal;font-display:swap;
   src:url('fonts/neodgm.woff2') format('woff2'),url('fonts/neodgm.woff') format('woff')}
 :root{
-  --bg:#1c1a33; --dot:#2a2750; --surf:#2b2850; --surf2:#3a3668; --line:#0d0c1d;
-  --ink:#fff6e3; --ink2:#d6cfee; --ink3:#9c95c4;
-  --yel:#ffd23f; --pink:#ff6fa8; --mint:#5fe3b5;
+  --bg:#fff6ec; --dot:#f0dccd; --surf:#ffffff; --surf2:#f6e8ef; --line:#3a2e44;
+  --ink:#3a2e44; --ink2:#5b4b66; --ink3:#9a86a6;
+  --yel:#ffd23f; --pink:#e85a96; --mint:#2e9e7a;
   --f:'NeoDunggeunmo',ui-monospace,monospace;
   --p:4px; /* 픽셀 한 칸 */
-  color-scheme:dark;
+  color-scheme:light;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg)}
@@ -43,8 +43,8 @@ header{display:flex;align-items:center;gap:16px}
 .logo img{width:40px;height:40px}
 .brand{min-width:0;flex:1}
 .brand h1{margin:0;font-size:32px;font-weight:normal;line-height:1.1;color:var(--ink);
-  text-shadow:var(--p) var(--p) 0 var(--line)}
-.brand p{margin:6px 0 0;font-size:16px;color:var(--yel)}
+  text-shadow:var(--p) var(--p) 0 var(--yel)}
+.brand p{margin:6px 0 0;font-size:16px;color:var(--pink)}
 .brand p b{font-weight:normal;color:var(--ink3)}
 
 .hud{display:flex;justify-content:space-between;gap:12px;font-size:16px;color:var(--ink3)}
@@ -58,7 +58,7 @@ header{display:flex;align-items:center;gap:16px}
 .talk .caret{position:absolute;right:14px;bottom:6px;color:var(--yel);animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 
-.label{margin:0 0 16px;font-size:16px;color:var(--yel)}
+.label{margin:0 0 16px;font-size:16px;color:var(--pink)}
 .label::before{content:'▶ '}
 
 .feat{display:block;transition:transform .1s steps(2)}
@@ -74,7 +74,7 @@ header{display:flex;align-items:center;gap:16px}
 .tag::before{content:'#'}
 .start{background:var(--yel);color:var(--line);padding:4px 14px;line-height:28px;
   box-shadow:0 -4px 0 0 var(--line),0 4px 0 0 var(--line),-4px 0 0 0 var(--line),4px 0 0 0 var(--line),4px 8px 0 0 var(--line)}
-.feat:hover .start{background:var(--pink)}
+.feat:hover .start{background:var(--pink);color:#fff}
 
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 24px}
 .tile{display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -97,7 +97,7 @@ nav{display:flex;padding:8px;gap:8px}
 nav a{flex:1 1 0;min-width:0;text-align:center;padding:8px 0;color:var(--ink2)}
 nav a i{font-style:normal;color:var(--ink3);margin-right:4px}
 nav a:hover,nav a:focus-visible{background:var(--surf2);color:var(--ink);outline:none}
-nav a:hover i,nav a:focus-visible i{color:var(--yel)}
+nav a:hover i,nav a:focus-visible i{color:var(--pink)}
 footer{text-align:center;color:var(--ink3);margin-top:-12px}
 @media (max-width:380px){.brand h1{font-size:24px}.feat h2{font-size:24px}.grid{gap:24px 18px}}
 @media (prefers-reduced-motion:reduce){.feat,.tile .frame{transition:none}.talk .caret,.bar::after{animation:none}}
@@ -106,18 +106,11 @@ footer{text-align:center;color:var(--ink3);margin-top:-12px}
 <body>
 <div class="wrap">
   <header>
-    <span class="logo px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABdElEQVR4Xu2Wv0oDQRDGxz+PcWATwUq0MKSzM0JS2Oo9Qao02lpY21j5BOcTKCjY2ElsxErwmkBeQyKzl9W90ex8e4zd/eC4P0xmPuab3SxRiyEn+905Xykp11OCY3DhYif3IfObp8kKknsVCUIIC6LFGagDqW318YgQVYBr7ekV0gSix4mL+4kfu3mICYkKcMWPzojKGVEnw0QEFA/31Vv/cOlM4DOwt5UsAAEX8PJe5Rv2qks+L8hfi1rd2cdbVAcuQOJFBHBxOS/Z5raxgNvnesLgHR7WALwD4Qz4olLMH9hZ4GfAAxRn7C0wBregIXYWNNwH7CzgGRj2aHAxivcCiWm0Coho0N1VjZAxmgXqn1HFJ1E5pbvz65oA7gZ/83fmO6acut9kowOLjWiN6Lj/K5EsXqOzQaQUZ/BVIPeBBbIrEs0CXEBD7FbBP4F3oOE+YGfBkhnQ0CxQj85JZ0JBfjl2X2JnQlUAk3oq9iCn4paWL7jvfkqIDNX0AAAAAElFTkSuQmCC" alt="" width="40" height="40"></span>
     <div class="brand">
       <h1 id="siteName">도트일기</h1>
       <p>바이브 코딩만으로 <b>·</b> 게임 만들기</p>
     </div>
   </header>
-
-  <div class="talk px">
-    <span class="who">도트일기</span>
-    <p>코드는 직접 안 짜요. 말로 설명해서 만든 작은 게임을 하나씩 여기 모아 둬요.</p>
-    <span class="caret" aria-hidden="true">▼</span>
-  </div>
 
   <section id="today-sec">
     <div class="hud"><p class="label">NEW GAME</p><span>GAMES <i id="count">0</i></span></div>
